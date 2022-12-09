@@ -6,10 +6,6 @@ The app was build within few hours. Limitation:
 * The computer plays random moves.
 * No optimistic updates.
 
-## Deploy your own
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example):
-
 ## Run locally
 
 ```bash
@@ -18,3 +14,7 @@ rm -rf convex.json
 npx convex init
 npm run dev
 ```
+
+## Deploy your own
+
+Deploy the example using [Vercel](https://docs.convex.dev/using/hosting/vercel):
