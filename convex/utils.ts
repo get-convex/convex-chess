@@ -6,6 +6,9 @@ export function isOpen(state: Document<"games">) : boolean {
 }
 
 export function hasPlayer(state: Document<"games">, player: string) : boolean {
+  if (!player) {
+    return false;
+  }
   return state.player1 == player || state.player2 == player;
 }
 

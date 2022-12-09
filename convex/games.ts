@@ -38,6 +38,9 @@ export const joinGame = mutation(async (
   id: Id<"games">,
   user: string,
 ) => {
+  if (!user) {
+    return
+  }
   let state = await db.get(id);
   if (state == null) {
     throw new Error(`Invalid game ${id}`);

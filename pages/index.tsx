@@ -7,7 +7,7 @@ import { gameTitle } from "../common"
 
 import { useRouter } from 'next/router'
 
-export default function App(props: {userName: string | null}) {
+export default function App(props: {userName: string}) {
   const router = useRouter();
 
   const ongoingGames : Document<"games">[] = useQuery("games:ongoingGames") || [];
@@ -61,13 +61,13 @@ export default function App(props: {userName: string | null}) {
             type="submit"
             value="Play vs another Player"
             className="ms-2 btn btn-primary"
-            disabled={!props.userName}
+            disabled={props.userName == ""}
           />
           <input
             type="submit"
             value="Play vs Computer"
             className="ms-2 btn btn-primary"
-            disabled={!props.userName}
+            disabled={props.userName == ""}
           />
           <input
             type="submit"
@@ -90,7 +90,7 @@ export default function App(props: {userName: string | null}) {
                     <input
                       id={game._id.toString()}
                       type="submit"
-                      value={isOpen(game) ? hasPlayer(game, props.userName ?? "") ? "Rejoin" : "Join" : "Watch"}
+                      value={isOpen(game) ? hasPlayer(game, props.userName) ? "Rejoin" : "Join" : "Watch"}
                       className="ms-2 btn btn-primary"
                       disabled={isOpen(game) && !props.userName}
                     />
