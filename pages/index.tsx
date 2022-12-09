@@ -1,46 +1,82 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent } from 'react'
+
 import { useMutation, useQuery } from '../convex/_generated/react'
+import { Id } from "../convex/_generated/dataModel";
+
+import { useRouter } from 'next/router'
 
 export default function App() {
-  const messages = useQuery('listMessages') || []
+  const router = useRouter();
+  const gameId = router.query.gameId ? new Id("games", router.query.gameId as string) : null;
 
-  const [newMessageText, setNewMessageText] = useState('')
-  const sendMessage = useMutation('sendMessage')
+  const openGames = useQuery("games:openGames") || [];
+  const startNewGame = useMutation("games:newGame");
 
-  const [name, setName] = useState('user')
-
-  useEffect(() => {
-    setName('User ' + Math.floor(Math.random() * 10000))
-  }, [])
-
-  async function handleSendMessage(event: FormEvent) {
-    event.preventDefault()
-    setNewMessageText('')
-    await sendMessage(newMessageText, name)
+  async function newGame(event: FormEvent) {
+    let value = (event.nativeEvent as any).submitter.defaultValue ?? "";
+    let player1 = null;
+    let player2 : null | "random" = null;
+    if (value == "Play vs Computer") {
+      player2 = "random";
+    }
+    event.preventDefault();
+    const id = await startNewGame(player1, player2);
+    router.push({ pathname: "/play", query: { gameId: id.id } });
   }
+
+  async function join(event: FormEvent) {
+    event.preventDefault();
+    let gameId = (event.nativeEvent as any).submitter.id ?? "";
+    console.log(gameId);
+    router.push({ pathname: "/play", query: { gameId } });
+  }
+
   return (
     <main>
-      <h1>Convex Chat</h1>
-      <p className="badge">
-        <span>{name}</span>
-      </p>
+      <b>Open Games</b>
       <ul>
-        {messages.map((message) => (
-          <li key={message._id.toString()}>
-            <span>{message.author}:</span>
-            <span>{message.body}</span>
-            <span>{new Date(message._creationTime).toLocaleTimeString()}</span>
-          </li>
-        ))}
+        <table>
+          <tbody>
+            {
+              openGames.map((game) => (
+                <tr>
+                  <td>{game._id.toString().substring(8) + "   "}</td>
+                  <td>
+                    <form
+                      onSubmit={join}
+                      className="d-flex justify-content-center"
+                    >
+                      <input
+                        id={game._id.toString()}
+                        type="submit"
+                        value="Join"
+                        className="ms-2 btn btn-primary"
+                      />                    
+                    </form>
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
       </ul>
-      <form onSubmit={handleSendMessage}>
-        <input
-          value={newMessageText}
-          onChange={(event) => setNewMessageText(event.target.value)}
-          placeholder="Write a message…"
-        />
-        <input type="submit" value="Send" disabled={!newMessageText} />
-      </form>
+      <form
+          onSubmit={newGame}
+          className="d-flex justify-content-center"
+        >
+          <input
+            type="submit"
+            value="Play vs Computer"
+            className="ms-2 btn btn-primary"
+            disabled={gameId ? true : false}
+          />
+          <input
+            type="submit"
+            value="Play vs Real Person"
+            className="ms-2 btn btn-primary"
+            disabled={gameId ? true : false}
+          />
+        </form>
     </main>
   )
 }

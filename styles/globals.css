@@ -16,6 +16,9 @@ main {
   padding-bottom: 1em;
   width: min(800px, 95vw);
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 h1 {
@@ -79,6 +82,7 @@ li span:nth-child(3) {
 form {
   display: flex;
   justify-content: center;
+  padding-top: 10px;
 }
 
 input:not([type]) {
@@ -108,4 +112,25 @@ button:hover {
 input[type='submit']:disabled,
 button:disabled {
   background-color: rgb(122, 160, 248);
+}
+
+.game {
+  display: flex;
+}
+
+.movesDiv {
+  padding-left: 10px;
+  width: 50px;
+}
+
+.moves {
+  border: 1px solid;
+}
+
+td.turnNumber {
+  min-width: 20px;
+}
+
+td.move {
+  min-width: 50px;
 }
