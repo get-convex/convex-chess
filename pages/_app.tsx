@@ -20,7 +20,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   function login() {
     let newName = window.prompt("Pick your name", "");
-    if (newName) {
+    if (newName && newName != "Computer") {
       sessionStorage.setItem('convex-chess-user', newName);
       setUserName(newName)        
     }
