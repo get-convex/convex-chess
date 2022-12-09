@@ -15,7 +15,7 @@ export default function Game(props: {userName: string}) {
   const performMove = useMutation('games:move').withOptimisticUpdate(
     (localStore, gameId, _, from, to) => {
       const state = localStore.getQuery("games:get", [gameId]);
-      if (state != "undefined") {
+      if (state) {
         const game = new Chess();
         game.loadPgn(state.pgn);
         game.move({from, to});
