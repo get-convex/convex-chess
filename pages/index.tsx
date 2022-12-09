@@ -19,7 +19,7 @@ export default function App(props: {userName: string | null}) {
     let player2 = null;
     const white = Boolean(Math.round(Math.random()));
     switch (value) {
-      case "New Game":
+      case "Play vs another Player":
         if (white) {
           player1 = props.userName;
         } else {
@@ -59,7 +59,7 @@ export default function App(props: {userName: string | null}) {
         >
           <input
             type="submit"
-            value="New Game"
+            value="Play vs another Player"
             className="ms-2 btn btn-primary"
             disabled={!props.userName}
           />
