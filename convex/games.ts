@@ -10,13 +10,13 @@ export const get = query(async ({ db }, id: Id<"games">) => {
 })
 
 export const ongoingGames = query(async ({ db }) => {
-  // Games are considered completed after an hour.
-  let minStartTime = Date.now() - 3600 * 1000;
+  // Games are considered completed after 24h.
+  let minStartTime = Date.now() - 24 * 3600 * 1000;
   return await db.query("games")
     .withIndex("finished", q => q.eq("finished", false))
     .order("desc")
     .filter(q => q.gt(q.field("_creationTime"), minStartTime))
-    .take(10);
+    .take(100);
 })
 
 export const newGame = mutation(async (
