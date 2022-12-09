@@ -1,16 +1,16 @@
 import { FormEvent } from 'react'
 
 import { useMutation, useQuery } from '../convex/_generated/react'
-import { Id } from "../convex/_generated/dataModel";
+import { Document } from "../convex/_generated/dataModel";
 import { isOpen, hasPlayer } from "../convex/utils"
-import { gameTitle } from "./_common"
+import { gameTitle } from "../common"
 
 import { useRouter } from 'next/router'
 
 export default function App(props: {userName: string | null}) {
   const router = useRouter();
 
-  const openGames = useQuery("games:openGames") || [];
+  const openGames : Document<"games">[] = useQuery("games:openGames") || [];
   const startNewGame = useMutation("games:newGame");
 
   async function newGame(event: FormEvent) {

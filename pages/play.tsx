@@ -5,7 +5,7 @@ import { Chessboard } from "react-chessboard";
 import { useMutation, useQuery } from '../convex/_generated/react'
 import { Id } from "../convex/_generated/dataModel";
 import { validateMove, getCurrentPlayer, isOpen } from "../convex/utils"
-import { gameTitle } from "./_common"
+import { gameTitle } from "../common"
 
 export default function Game(props: {userName: string}) {
   const router = useRouter();
