@@ -1,4 +1,4 @@
-import { Document } from "../convex/_generated/dataModel";
+import { Document } from "./convex/_generated/dataModel";
 
 export function gameTitle(state: Document<"games">) {
     const player1 = state.player1 ? (<span className="whitePlayer">{state.player1}</span>) : (<></>)
