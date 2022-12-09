@@ -90,7 +90,7 @@ export default function App(props: {userName: string}) {
                     <input
                       id={game._id.toString()}
                       type="submit"
-                      value={isOpen(game) ? hasPlayer(game, props.userName) ? "Rejoin" : "Join" : "Watch"}
+                      value={hasPlayer(game, props.userName) ? "Rejoin" : isOpen(game) ? "Join" : "Watch"}
                       className="ms-2 btn btn-primary"
                       disabled={isOpen(game) && !props.userName}
                     />

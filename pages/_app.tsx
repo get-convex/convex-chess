@@ -30,6 +30,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <ConvexProvider client={convex}>
+      <div className="convexImage">
+        <a href="/"><img src="convex.svg"></img></a>
+      </div>
       <h1>Convex Chess</h1>
       <p className="badge">
         {

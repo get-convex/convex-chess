@@ -149,3 +149,8 @@ button:disabled {
 .moveSquare {
   min-width: 50px;
 }
+
+.convexImage {
+  margin-top: 20px;
+  margin-left: 20px;
+}
