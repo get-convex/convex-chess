@@ -15,6 +15,5 @@ export default defineSchema({
       s.literal<string>("random"),
       s.null(),
     ),
-    finished: s.boolean(),
-  }).index("finished", ["finished"])
+  })
 })

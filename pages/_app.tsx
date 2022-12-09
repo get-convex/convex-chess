@@ -14,6 +14,8 @@ function MyApp({ Component, pageProps }: AppProps) {
     setUserName('User ' + Math.floor(Math.random() * 10000))
   }, [])
 
+  pageProps.userName = userName;
+
   return (
     <ConvexProvider client={convex}>
       <h1>Convex Chess</h1>

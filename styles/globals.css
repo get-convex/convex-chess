@@ -33,7 +33,22 @@ h1 {
   margin-bottom: 16px;
 }
 .badge span {
-  background-color: #212529;
+  background-color: #279929;
+  border-radius: 6px;
+  font-weight: bold;
+  padding: 4px 8px 4px 8px;
+  font-size: 0.75em;
+}
+.whitePlayer {
+  background-color: #f0f0f0;
+  color: #212529;
+  border-radius: 6px;
+  font-weight: bold;
+  padding: 4px 8px 4px 8px;
+  font-size: 0.75em;
+}
+.blackPlayer {
+  background-color: #000000;
   color: #ffffff;
   border-radius: 6px;
   font-weight: bold;
@@ -79,10 +94,10 @@ li span:nth-child(3) {
   white-space: nowrap;
 }
 
-form {
+.control-form {
   display: flex;
   justify-content: center;
-  padding-top: 10px;
+  padding-bottom: 20px;
 }
 
 input:not([type]) {
@@ -118,19 +133,19 @@ button:disabled {
   display: flex;
 }
 
-.movesDiv {
+.moves {
   padding-left: 10px;
   width: 50px;
 }
 
-.moves {
+.moves table {
   border: 1px solid;
 }
 
-td.turnNumber {
+.moveNumber {
   min-width: 20px;
 }
 
-td.move {
+.moveSquare {
   min-width: 50px;
 }

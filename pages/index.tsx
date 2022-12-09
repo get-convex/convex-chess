@@ -2,12 +2,13 @@ import { FormEvent } from 'react'
 
 import { useMutation, useQuery } from '../convex/_generated/react'
 import { Id } from "../convex/_generated/dataModel";
+import { isOpen, hasPlayer } from "../convex/utils"
+import { gameTitle } from "./_common"
 
 import { useRouter } from 'next/router'
 
-export default function App() {
+export default function App(props: {userName: string | null}) {
   const router = useRouter();
-  const gameId = router.query.gameId ? new Id("games", router.query.gameId as string) : null;
 
   const openGames = useQuery("games:openGames") || [];
   const startNewGame = useMutation("games:newGame");
@@ -15,9 +16,29 @@ export default function App() {
   async function newGame(event: FormEvent) {
     let value = (event.nativeEvent as any).submitter.defaultValue ?? "";
     let player1 = null;
-    let player2 : null | "random" = null;
-    if (value == "Play vs Computer") {
-      player2 = "random";
+    let player2 = null;
+    const white = Boolean(Math.round(Math.random()));
+    switch (value) {
+      case "New Game":
+        if (white) {
+          player1 = props.userName;
+        } else {
+          player2 = props.userName;
+        }
+        break;
+      case "Play vs Computer":
+        if (white) {
+          player1 = props.userName;
+          player2 = "Computer";
+        } else {
+          player1 = "Computer";
+          player2 = props.userName;
+        }
+        break;
+      case "Computer vs Computer":
+        player1 = "Computer";
+        player2 = "Computer";
+        break;
     }
     event.preventDefault();
     const id = await startNewGame(player1, player2);
@@ -26,57 +47,60 @@ export default function App() {
 
   async function join(event: FormEvent) {
     event.preventDefault();
-    let gameId = (event.nativeEvent as any).submitter.id ?? "";
-    console.log(gameId);
+    const gameId = (event.nativeEvent as any).submitter.id ?? "";
     router.push({ pathname: "/play", query: { gameId } });
   }
 
   return (
     <main>
-      <b>Open Games</b>
-      <ul>
-        <table>
-          <tbody>
-            {
-              openGames.map((game) => (
-                <tr>
-                  <td>{game._id.toString().substring(8) + "   "}</td>
-                  <td>
-                    <form
-                      onSubmit={join}
-                      className="d-flex justify-content-center"
-                    >
-                      <input
-                        id={game._id.toString()}
-                        type="submit"
-                        value="Join"
-                        className="ms-2 btn btn-primary"
-                      />                    
-                    </form>
-                  </td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
-      </ul>
       <form
           onSubmit={newGame}
-          className="d-flex justify-content-center"
+          className="control-form d-flex justify-content-center"
         >
+          <input
+            type="submit"
+            value="New Game"
+            className="ms-2 btn btn-primary"
+            disabled={!props.userName}
+          />
           <input
             type="submit"
             value="Play vs Computer"
             className="ms-2 btn btn-primary"
-            disabled={gameId ? true : false}
+            disabled={!props.userName}
           />
           <input
             type="submit"
-            value="Play vs Real Person"
+            value="Computer vs Computer"
             className="ms-2 btn btn-primary"
-            disabled={gameId ? true : false}
           />
         </form>
+      <b>Ongoing Games</b>
+      <table>
+        <tbody>
+          {
+            openGames.map((game, i) => (
+              <tr key={i}>
+                <td>{gameTitle(game)}</td>
+                <td>
+                  <form
+                    onSubmit={join}
+                    className="d-flex justify-content-center"
+                  >
+                    <input
+                      id={game._id.toString()}
+                      type="submit"
+                      value={isOpen(game) ? hasPlayer(game, props.userName ?? "") ? "Rejoin" : "Join" : "Watch"}
+                      className="ms-2 btn btn-primary"
+                      disabled={isOpen(game) && !props.userName}
+                    />
+                  </form>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
     </main>
   )
 }
