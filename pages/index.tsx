@@ -10,7 +10,7 @@ import { useRouter } from 'next/router'
 export default function App(props: {userName: string | null}) {
   const router = useRouter();
 
-  const openGames : Document<"games">[] = useQuery("games:openGames") || [];
+  const ongoingGames : Document<"games">[] = useQuery("games:ongoingGames") || [];
   const startNewGame = useMutation("games:newGame");
 
   async function newGame(event: FormEvent) {
@@ -79,7 +79,7 @@ export default function App(props: {userName: string | null}) {
       <table>
         <tbody>
           {
-            openGames.map((game, i) => (
+            ongoingGames.map((game, i) => (
               <tr key={i}>
                 <td>{gameTitle(game)}</td>
                 <td>

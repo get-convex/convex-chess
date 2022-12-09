@@ -9,10 +9,11 @@ export const get = query(async ({ db }, id: Id<"games">) => {
   return await db.get(id);
 })
 
-export const openGames = query(async ({ db }) => {
+export const ongoingGames = query(async ({ db }) => {
   // Games are considered completed after an hour.
   let minStartTime = Date.now() - 3600 * 1000;
   return await db.query("games")
+    .withIndex("finished", q => q.eq("finished", false))
     .order("desc")
     .filter(q => q.gt(q.field("_creationTime"), minStartTime))
     .take(10);
@@ -28,6 +29,7 @@ export const newGame = mutation(async (
     pgn: game.pgn(),
     player1,
     player2,
+    finished: false,
   })
 })
 
@@ -67,7 +69,8 @@ async function performMove(
   }
 
   await db.patch(state._id, {
-    pgn: nextState,
+    pgn: nextState.pgn(),
+    finished: nextState.isGameOver(),
   });
 }
 

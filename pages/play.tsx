@@ -12,7 +12,20 @@ export default function Game(props: {userName: string}) {
   const gameId = new Id("games", router.query.gameId as string);
 
   const gameState = useQuery('games:get', gameId)
-  const performMove = useMutation('games:move');
+  const performMove = useMutation('games:move').withOptimisticUpdate(
+    (localStore, gameId, _, from, to) => {
+      const state = localStore.getQuery("games:get", [gameId]);
+      if (state != "undefined") {
+        const game = new Chess();
+        game.loadPgn(state.pgn);
+        game.move({from, to});
+        const newState = { ...state };
+        newState.pgn = game.pgn();
+        console.log("nextState", game.history(), gameId);
+        localStore.setQuery("games:get", [gameId], newState);
+      }
+    }
+  );
   const joinGame = useMutation("games:joinGame");
   const makeComputerMove = useMutation("games:makeComputerMove")
   if (!gameState) {

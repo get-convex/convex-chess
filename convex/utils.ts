@@ -15,7 +15,7 @@ export function getCurrentPlayer(state: Document<"games">) : string | null {
     return (game.turn() == 'w') ? state.player1 : state.player2;
 }
 
-export function validateMove(state: Document<"games">, player: string, from: string, to: string) : string | null {
+export function validateMove(state: Document<"games">, player: string, from: string, to: string) : Chess | null {
     if (getCurrentPlayer(state) != player) {
       // Wrong player.
       return null;
@@ -30,5 +30,5 @@ export function validateMove(state: Document<"games">, player: string, from: str
         valid = game.move(moveAndPromote);
     }
 
-    return valid ? game.pgn() : null;
+    return valid ? game : null;
 }

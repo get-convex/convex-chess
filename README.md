@@ -2,9 +2,7 @@
 
 This example demonstrates how to build a fully functional chat app using React, Next.js and Convex.
 
-The app was build within few hours. Limitation:
-* The computer plays random moves.
-* No optimistic updates.
+The app was build within few hours. The computer just does random valid moves for now. Will improve later.
 
 ## Run locally
 
