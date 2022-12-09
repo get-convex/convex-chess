@@ -18,10 +18,12 @@ function MyApp({ Component, pageProps }: AppProps) {
     setUserName(user);
   }, [])
 
-  function createUser() {
-    const newName = 'User ' + Math.floor(Math.random() * 10000);
-    sessionStorage.setItem('convex-chess-user', newName);
-    setUserName(newName)
+  function login() {
+    let newName = window.prompt("Pick your name", "");
+    if (newName) {
+      sessionStorage.setItem('convex-chess-user', newName);
+      setUserName(newName)        
+    }
   }
 
   pageProps.userName = userName;
@@ -32,7 +34,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       <p className="badge">
         {
           userName ?
-          <span>{userName}</span> : <button className="btn btn-primary" onClick={createUser}>Log in</button>
+          <span>{userName}</span> : <button className="btn btn-primary" onClick={login}>Log in</button>
         }
       </p>
       <Component {...pageProps} />
