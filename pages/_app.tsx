@@ -37,7 +37,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       <p className="badge">
         {
           userName ?
-          <span>{userName}</span> : <button className="btn btn-primary" onClick={login}>Log to play</button>
+          <span>{userName}</span> : <button className="btn btn-primary" onClick={login}>Login to play</button>
         }
       </p>
       <Component {...pageProps} />
