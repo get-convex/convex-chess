@@ -3,5 +3,10 @@
   "team": "gopresley",
   "prodUrl": "https://grieving-hedgehog-488.convex.cloud",
   "functions": "convex/",
-  "authInfo": []
+  "authInfo": [
+    {
+      "domain": "https://convexdev.us.auth0.com/",
+      "applicationID": "tPilWp4HDDF4yoi3D995XMrVIJhflD4V"
+    }
+  ]
 }

@@ -7,7 +7,7 @@ import { gameTitle } from "../common"
 
 import { useRouter } from 'next/router'
 
-export default function App(props: {userName: string}) {
+export default function(props: {userName: string}) {
   const router = useRouter();
 
   const ongoingGames : Document<"games">[] = useQuery("games:ongoingGames") || [];

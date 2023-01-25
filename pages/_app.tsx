@@ -1,9 +1,13 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 
-import { useState, useEffect } from 'react'
+import { ConvexReactClient } from 'convex/react'
+import { ConvexProviderWithAuth0 } from 'convex/react-auth0'
 
-import { ConvexProvider, ConvexReactClient } from 'convex/react'
+import convexConfig from "../convex.json";
+import { useAuth0 } from '@auth0/auth0-react';
+
+const authInfo = convexConfig.authInfo[0];
 
 const address = process.env.NEXT_PUBLIC_CONVEX_URL;
 if (!address) {
@@ -11,42 +15,43 @@ if (!address) {
 }
 const convex = new ConvexReactClient(address);
 
-function MyApp({ Component, pageProps }: AppProps) {
-  const [userName, setUserName] = useState("")
-
-  useEffect(() => {
-    let user = sessionStorage.getItem('convex-chess-user');
-    if (!user) {
-      return;
-    }
-    setUserName(user);
-  }, [])
-
-  function login() {
-    let newName = window.prompt("Pick your name", "");
-    if (newName && newName != "Computer") {
-      sessionStorage.setItem('convex-chess-user', newName);
-      setUserName(newName)        
-    }
-  }
-
-  pageProps.userName = userName;
-
+function App(props: AppProps) {
   return (
-    <ConvexProvider client={convex}>
-      <div className="convexImage">
-        <a href="/"><img src="convex.svg"></img></a>
-      </div>
-      <h1>Convex Chess</h1>
-      <p className="badge">
-        {
-          userName ?
-          <span>{userName}</span> : <button className="btn btn-primary" onClick={login}>Login to play</button>
-        }
-      </p>
-      <Component {...pageProps} />
-    </ConvexProvider>
+    <div>
+      <ConvexProviderWithAuth0
+          client={convex}
+          authInfo={authInfo}
+          loggedOut={
+            <MyApp {...props} />
+          }
+      >
+        <MyApp {...props} />
+      </ConvexProviderWithAuth0>
+    </div>
   )
 }
 
-export default MyApp
+function MyApp({ Component, pageProps }: AppProps) {
+  const { user, loginWithRedirect } = useAuth0();
+
+  pageProps.userName = user?.name ?? "";
+
+  return (
+    <div>
+      <div className="convexImage">
+          <a href="/"><img src="convex.svg"></img></a>
+      </div>
+      <h1>Convex Chess</h1>
+      <p className="badge">
+          {
+          user ?
+            <span>Logged in{ user.name ? ` as ${user.name}` : "" }</span>
+          : <button className="btn btn-primary" onClick={loginWithRedirect}>Login</button>
+          }
+      </p>
+      <Component {...pageProps} />
+    </div>
+  )
+}
+
+export default App

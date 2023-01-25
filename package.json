@@ -10,6 +10,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^1.12.1",
     "chess.js": "^1.0.0-alpha.0",
     "convex": "^0.7.0",
     "next": "latest",

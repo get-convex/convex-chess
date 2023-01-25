@@ -7,7 +7,7 @@ import { Id } from "../convex/_generated/dataModel";
 import { validateMove, isOpen } from "../convex/utils"
 import { gameTitle } from "../common"
 
-export default function Game(props: {userName: string}) {
+export default function(props: {userName: string}) {
   const router = useRouter();
   const gameId = new Id("games", router.query.gameId as string);
 
@@ -41,6 +41,7 @@ export default function Game(props: {userName: string}) {
   game.loadPgn(gameState.pgn);
 
   function onDrop(sourceSquare: string, targetSquare: string) {
+    console.log("Dropped");
     let nextState = validateMove(gameState!, props.userName, sourceSquare, targetSquare);
     if (nextState) {
       performMove(gameId, props.userName, sourceSquare, targetSquare);
