@@ -4,8 +4,12 @@ import type { AppProps } from 'next/app'
 import { useState, useEffect } from 'react'
 
 import { ConvexProvider, ConvexReactClient } from 'convex/react'
-import clientConfig from '../convex/_generated/clientConfig'
-const convex = new ConvexReactClient(clientConfig)
+
+const address = process.env.NEXT_PUBLIC_CONVEX_URL;
+if (!address) {
+  throw new Error("Missing NEXT_PUBLIC_CONVEX_URL env variable!");
+}
+const convex = new ConvexReactClient(address);
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [userName, setUserName] = useState("")

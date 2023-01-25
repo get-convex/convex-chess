@@ -4,7 +4,7 @@ import { Chessboard } from "react-chessboard";
 
 import { useMutation, useQuery } from '../convex/_generated/react'
 import { Id } from "../convex/_generated/dataModel";
-import { validateMove, getCurrentPlayer, isOpen } from "../convex/utils"
+import { validateMove, isOpen } from "../convex/utils"
 import { gameTitle } from "../common"
 
 export default function Game(props: {userName: string}) {
@@ -27,7 +27,6 @@ export default function Game(props: {userName: string}) {
     }
   );
   const joinGame = useMutation("games:joinGame");
-  const makeComputerMove = useMutation("games:makeComputerMove")
   if (!gameState) {
     return (
       <></>
@@ -47,11 +46,6 @@ export default function Game(props: {userName: string}) {
       performMove(gameId, props.userName, sourceSquare, targetSquare);
     }
     return nextState != null;
-  }
-
-  let currentPlayer = getCurrentPlayer(gameState);
-  if (currentPlayer == "Computer") {
-    setTimeout(async () => await makeComputerMove(gameId, game.history().length), 1000);
   }
 
   type Turn = {

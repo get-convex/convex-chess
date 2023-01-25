@@ -1,7 +1,7 @@
-import { query, mutation, DatabaseWriter } from './_generated/server'
+import { query, mutation, DatabaseWriter, DatabaseReader } from './_generated/server'
 import { Id, Document } from "./_generated/dataModel";
 
-import { validateMove } from "./utils"
+import { getCurrentPlayer, validateMove } from "./utils"
 
 import { Chess, Move } from "chess.js";
 
@@ -20,17 +20,21 @@ export const ongoingGames = query(async ({ db }) => {
 })
 
 export const newGame = mutation(async (
-  { db },
+  ctx: any,
   player1: string | null,
   player2: string | null,
 ) => {
+  const { db, scheduler } = ctx;
   const game = new Chess();
-  return await db.insert('games', {
+  const id = await db.insert('games', {
     pgn: game.pgn(),
     player1,
     player2,
     finished: false,
-  })
+  });
+  scheduler.runAfter(1000, "games:maybeMakeComputerMove", id);
+
+  return id;
 })
 
 export const joinGame = mutation(async (
@@ -57,8 +61,9 @@ export const joinGame = mutation(async (
   }
 })
 
-async function performMove(
+async function _performMove(
   db: DatabaseWriter,
+  scheduler: any,
   state: Document<"games">,
   player: string,
   from: string,
@@ -75,41 +80,43 @@ async function performMove(
     pgn: nextState.pgn(),
     finished: nextState.isGameOver(),
   });
+
+  scheduler.runAfter(1000, "games:maybeMakeComputerMove", state._id);
 }
 
 export const move = mutation(async (
-  { db },
+  ctx: any,
   id: Id<"games">,
   user: string,
   from: string,
   to: string,
 ) => {
+  const { db, scheduler } = ctx;
   // Load the game.
   let state = await db.get(id);
   if (state == null) {
     throw new Error(`Invalid game ${id}`);
   }
 
-  await performMove(db, state, user, from, to);
+  await _performMove(db, scheduler, state, user, from, to);
 })
 
-export const makeComputerMove = mutation(async (
-  { db },
+export const maybeMakeComputerMove = mutation(async (
+  ctx: any,
   id: Id<"games">,
-  num_moves: number,
 ) => {
+  const { db, scheduler } = ctx;
   let state = await db.get(id);
   if (state == null) {
     throw new Error(`Invalid game ${id}`);
   }
 
-  const game = new Chess();
-  game.loadPgn(state.pgn);
-
-  if (num_moves != game.history().length) {
-    // Already played.
+  if (getCurrentPlayer(state) !== "Computer") {
     return;
   }
+
+  const game = new Chess();
+  game.loadPgn(state.pgn);
 
   const possibleMoves = game.moves({ verbose: true });
   if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0) {
@@ -117,5 +124,5 @@ export const makeComputerMove = mutation(async (
   }
   const randomIndex = Math.floor(Math.random() * possibleMoves.length);
   const move = possibleMoves[randomIndex] as Move;
-  await performMove(db, state, "Computer", move.from, move.to);
+  await _performMove(db, scheduler, state, "Computer", move.from, move.to);
 })
