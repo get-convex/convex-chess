@@ -1,18 +1,18 @@
 import { Document } from "./convex/_generated/dataModel";
 
-export function gameTitle(state: Document<"games">) {
-    const player1 = state.player1 ? (<span className="whitePlayer">{state.player1}</span>) : (<></>)
-    const player2 = state.player1 ? (<span className="blackPlayer">{state.player2}</span>) : (<></>)
-    if (state.player1 && state.player2) {
+export function gameTitle(state: { player1Name: string, player2Name: string }) {
+    const player1Span = state.player1Name ? (<span className="whitePlayer">{state.player1Name}</span>) : (<></>)
+    const player2Span = state.player2Name ? (<span className="blackPlayer">{state.player2Name}</span>) : (<></>)
+    if (state.player1Name && state.player2Name) {
       return (
         <div>
-          {player1} vs {player2}
+          {player1Span} vs {player2Span}
         </div>
       )
-    } else if (state.player1) {
-      return player1;
-    } else if (state.player2) {
-      return player2;
+    } else if (state.player1Name) {
+      return player1Span;
+    } else if (state.player2Name) {
+      return player2Span;
     } else {
       return <div></div>;
     }

@@ -11,6 +11,7 @@
 
 import type { ApiFromModules } from "convex/api";
 import type * as games from "../games";
+import type * as users from "../users";
 import type * as utils from "../utils";
 
 /**
@@ -24,5 +25,6 @@ import type * as utils from "../utils";
  */
 export type API = ApiFromModules<{
   games: typeof games;
+  users: typeof users;
   utils: typeof utils;
 }>;

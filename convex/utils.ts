@@ -1,25 +1,42 @@
 import { Chess } from "chess.js";
-import { Document } from "../convex/_generated/dataModel";
+import { GenericId } from "convex/dist/types/values/values";
+import { Document, Id } from "../convex/_generated/dataModel";
+
+export type PlayerId = Id<"users"> | "Computer" | null;
+
+export function playerEquals(player1: PlayerId, player2: PlayerId) {
+  if (!player1) {
+    // null is not equal to null.
+    return false;
+  }
+  return (typeof player1 == "string") ? player1 == player2 : player1.equals(player2);
+}
 
 export function isOpen(state: Document<"games">) : boolean {
   return !state.player1 || !state.player2;
 }
 
-export function hasPlayer(state: Document<"games">, player: string) : boolean {
+export function hasPlayer(state: Document<"games">, player: PlayerId) : boolean {
   if (!player) {
     return false;
   }
-  return state.player1 == player || state.player2 == player;
+  return playerEquals(state.player1 as any, player) || playerEquals(state.player2 as any, player);
 }
 
-export function getCurrentPlayer(state: Document<"games">) : string | null {
+export function getCurrentPlayer(state: Document<"games">) : PlayerId {
     const game = new Chess();
     game.loadPgn(state.pgn);
-    return (game.turn() == 'w') ? state.player1 : state.player2;
+    let result = (game.turn() == 'w') ? state.player1 : state.player2;
+    return result as any;
 }
 
-export function validateMove(state: Document<"games">, player: string, from: string, to: string) : Chess | null {
-    if (getCurrentPlayer(state) != player) {
+export function validateMove(
+  state: Document<"games">,
+  player: PlayerId,
+  from: string,
+  to: string,
+) : Chess | null {
+    if (!playerEquals(getCurrentPlayer(state), player)) {
       // Wrong player.
       return null;
     }

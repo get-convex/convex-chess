@@ -4,16 +4,18 @@ import { Chessboard } from "react-chessboard";
 
 import { useMutation, useQuery } from '../convex/_generated/react'
 import { Id } from "../convex/_generated/dataModel";
-import { validateMove, isOpen } from "../convex/utils"
+import { validateMove, isOpen, playerEquals } from "../convex/utils"
 import { gameTitle } from "../common"
 
-export default function(props: {userName: string}) {
+export default function() {
   const router = useRouter();
   const gameId = new Id("games", router.query.gameId as string);
 
   const gameState = useQuery('games:get', gameId)
+  const userId = useQuery("users:getUser") ?? null;
+
   const performMove = useMutation('games:move').withOptimisticUpdate(
-    (localStore, gameId, _, from, to) => {
+    (localStore, gameId, from, to) => {
       const state = localStore.getQuery("games:get", [gameId]);
       if (state) {
         const game = new Chess();
@@ -34,17 +36,17 @@ export default function(props: {userName: string}) {
   }
 
   if (isOpen(gameState)) {
-    joinGame(gameId, props.userName);
+    joinGame(gameId);
   }
 
   const game = new Chess();
   game.loadPgn(gameState.pgn);
 
   function onDrop(sourceSquare: string, targetSquare: string) {
-    console.log("Dropped");
-    let nextState = validateMove(gameState!, props.userName, sourceSquare, targetSquare);
+    let nextState = validateMove(gameState!, userId, sourceSquare, targetSquare);
     if (nextState) {
-      performMove(gameId, props.userName, sourceSquare, targetSquare);
+      performMove(gameId, sourceSquare, targetSquare);
+    } else {
     }
     return nextState != null;
   }
@@ -62,7 +64,7 @@ export default function(props: {userName: string}) {
     turns.push({num: turns.length + 1, whiteMove, blackMove});
   }
 
-  const boardOrientation = (props.userName == gameState.player2) ? 'black' : 'white';
+  const boardOrientation = playerEquals(userId, gameState.player2 as any) ? 'black' : 'white';
 
   return (
     <main>

@@ -1,38 +1,42 @@
 import { FormEvent } from 'react'
 
 import { useMutation, useQuery } from '../convex/_generated/react'
-import { Document } from "../convex/_generated/dataModel";
+import { Document, Id } from "../convex/_generated/dataModel";
 import { isOpen, hasPlayer } from "../convex/utils"
 import { gameTitle } from "../common"
 
 import { useRouter } from 'next/router'
+import { useAuth0 } from '@auth0/auth0-react';
 
-export default function(props: {userName: string}) {
+export default function() {
   const router = useRouter();
 
-  const ongoingGames : Document<"games">[] = useQuery("games:ongoingGames") || [];
+  const { user } = useAuth0();
+
+  const ongoingGames = useQuery("games:ongoingGames") || [];
+  const userId = useQuery("users:getUser") ?? null;
   const startNewGame = useMutation("games:newGame");
 
   async function newGame(event: FormEvent) {
-    let value = (event.nativeEvent as any).submitter.defaultValue ?? "";
-    let player1 = null;
-    let player2 = null;
+    const value = (event.nativeEvent as any).submitter.defaultValue ?? "";
     const white = Boolean(Math.round(Math.random()));
+    let player1 : "Me" | "Computer" | null = null;
+    let player2 : "Me" | "Computer" | null = null;
     switch (value) {
       case "Play vs another Player":
         if (white) {
-          player1 = props.userName;
+          player1 = "Me";
         } else {
-          player2 = props.userName;
+          player2 = "Me";
         }
         break;
       case "Play vs Computer":
         if (white) {
-          player1 = props.userName;
+          player1 = "Me";
           player2 = "Computer";
         } else {
           player1 = "Computer";
-          player2 = props.userName;
+          player2 = "Me";
         }
         break;
       case "Computer vs Computer":
@@ -61,13 +65,17 @@ export default function(props: {userName: string}) {
             type="submit"
             value="Play vs another Player"
             className="ms-2 btn btn-primary"
-            disabled={props.userName == ""}
+            // We use use instead of userId here so this button doesn't toggle
+            // between enabled and disabled.
+            disabled={!user}
           />
           <input
             type="submit"
             value="Play vs Computer"
             className="ms-2 btn btn-primary"
-            disabled={props.userName == ""}
+            // We use use instead of userId here so this button doesn't toggle
+            // between enabled and disabled.
+            disabled={!user}
           />
           <input
             type="submit"
@@ -80,7 +88,7 @@ export default function(props: {userName: string}) {
         <tbody>
           {
             ongoingGames.map((game, i) => (
-              <tr key={i}>
+              <tr key={game._id.toString()}>
                 <td>{gameTitle(game)}</td>
                 <td>
                   <form
@@ -90,9 +98,9 @@ export default function(props: {userName: string}) {
                     <input
                       id={game._id.toString()}
                       type="submit"
-                      value={hasPlayer(game, props.userName) ? "Rejoin" : isOpen(game) ? "Join" : "Watch"}
+                      value={hasPlayer(game, userId) ? "Rejoin" : isOpen(game) ? "Join" : "Watch"}
                       className="ms-2 btn btn-primary"
-                      disabled={isOpen(game) && !props.userName}
+                      disabled={isOpen(game) && !userId}
                     />
                   </form>
                 </td>
