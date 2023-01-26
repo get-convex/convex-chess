@@ -65,7 +65,7 @@ export default function() {
             type="submit"
             value="Play vs another Player"
             className="ms-2 btn btn-primary"
-            // We use use instead of userId here so this button doesn't toggle
+            // We use user instead of userId here so this button doesn't toggle
             // between enabled and disabled.
             disabled={!user}
           />
@@ -73,7 +73,7 @@ export default function() {
             type="submit"
             value="Play vs Computer"
             className="ms-2 btn btn-primary"
-            // We use use instead of userId here so this button doesn't toggle
+            // We use user instead of userId here so this button doesn't toggle
             // between enabled and disabled.
             disabled={!user}
           />
@@ -100,7 +100,9 @@ export default function() {
                       type="submit"
                       value={hasPlayer(game, userId) ? "Rejoin" : isOpen(game) ? "Join" : "Watch"}
                       className="ms-2 btn btn-primary"
-                      disabled={isOpen(game) && !userId}
+                      // We use user instead of userId here we can join immediately
+                      // after logging in.
+                      disabled={isOpen(game) && !user}
                     />
                   </form>
                 </td>
