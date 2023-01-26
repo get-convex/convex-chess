@@ -34,7 +34,7 @@ function App(props: AppProps) {
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
-  const { user, loginWithRedirect } = useAuth0();
+  const { user, loginWithRedirect, logout } = useAuth0();
  
   return (
     <div>
@@ -45,8 +45,11 @@ function MyApp({ Component, pageProps }: AppProps) {
       <p className="badge">
           {
           user ?
-            <span>Logged in{ user.name ? ` as ${user.name}` : "" }</span>
-          : <button className="btn btn-primary" onClick={loginWithRedirect}>Login</button>
+            <div>
+              <span>Logged in{ user.name ? ` as ${user.name}` : "" }</span>
+              <button className="btn btn-secondary" onClick={() => logout({returnTo: window.location.origin})}>Logout</button>
+            </div>
+          : <button className="btn btn-secondary" onClick={loginWithRedirect}>Login</button>
           }
       </p>
       <Component {...pageProps} />
