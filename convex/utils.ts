@@ -1,5 +1,4 @@
 import { Chess } from "chess.js";
-import { GenericId } from "convex/dist/types/values/values";
 import { Document, Id } from "../convex/_generated/dataModel";
 
 export type PlayerId = Id<"users"> | "Computer" | null;
