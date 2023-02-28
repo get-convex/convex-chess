@@ -89,7 +89,7 @@ export const newGame = mutation(async (
     finished: false,
   });
 
-  scheduler.runAfter(1000, "games:maybeMakeComputerMove", id);
+  scheduler.runAfter(1000, "actions/engine:maybeMakeComputerMove", id);
 
   return id;
 })
@@ -128,6 +128,7 @@ async function _performMove(
 ) {
   let nextState = validateMove(state, player, from, to);
   if (!nextState) {
+    console.log(`invalid move ${from}-${to}`);
     // Invalid move.
     return;
   }
@@ -137,7 +138,7 @@ async function _performMove(
     finished: nextState.isGameOver(),
   });
 
-  scheduler.runAfter(1000, "games:maybeMakeComputerMove", state._id);
+  scheduler.runAfter(1000, "actions/engine:maybeMakeComputerMove", state._id);
 }
 
 export const move = mutation(async (
@@ -171,6 +172,7 @@ export const internalGetPgnForComputerMove = query(async (
   }
 
   if (getCurrentPlayer(state) !== "Computer") {
+    console.log("it's not the computer's turn");
     return null;
   }
 
@@ -179,6 +181,7 @@ export const internalGetPgnForComputerMove = query(async (
 
   const possibleMoves = game.moves({ verbose: true });
   if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0) {
+    console.log("no moves");
     return null;
   }
   return state.pgn;
