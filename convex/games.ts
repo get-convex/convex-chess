@@ -161,6 +161,45 @@ export const move = mutation(async (
   await _performMove(db, userId, scheduler, state, from, to);
 })
 
+export const internalGetPgnForComputerMove = query(async (
+  {db},
+  id: Id<"games">,
+) => {
+  let state = await db.get(id);
+  if (state == null) {
+    throw new Error(`Invalid game ${id}`);
+  }
+
+  if (getCurrentPlayer(state) !== "Computer") {
+    return null;
+  }
+
+  const game = new Chess();
+  game.loadPgn(state.pgn);
+
+  const possibleMoves = game.moves({ verbose: true });
+  if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0) {
+    return null;
+  }
+  return state.pgn;
+})
+
+export const internalMakeComputerMove = mutation(async (
+  {db, scheduler},
+  id: Id<"games">,
+  moveFrom: string,
+  moveTo: string,
+) => {
+  let state = await db.get(id);
+  if (state == null) {
+    throw new Error(`Invalid game ${id}`);
+  }
+  if (getCurrentPlayer(state) !== "Computer") {
+    return;
+  }
+  await _performMove(db, "Computer", scheduler, state, moveFrom, moveTo);
+})
+
 export const maybeMakeComputerMove = mutation(async (
   ctx: any,
   id: Id<"games">,
