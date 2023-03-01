@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useQuery } from '../convex/_generated/react';
 import Link from 'next/link';
 import { gameTitle } from '../common';
+import { GameResult } from '../convex/search';
 
 const authInfo = convexConfig.authInfo[0];
 
@@ -64,7 +65,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                   <td>
                     {
                     result._id.tableName == "games" ?
-                      <Link href={`play?gameId=${result._id.id}`}>{gameTitle(result as DenormalizedGame)}</Link> :
+                      <Link href={`play?gameId=${result._id.id}`}>{gameTitle(result as GameResult)}</Link> :
                       <Link href={`user?userId=${result._id.id}`}>{(result as any).name}</Link>
                     }
                   </td>
