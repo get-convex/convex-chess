@@ -89,7 +89,7 @@ export const newGame = mutation(async (
     finished: false,
   });
 
-  scheduler.runAfter(1000, "games:maybeMakeComputerMove", id);
+  scheduler.runAfter(1000, "actions/engine:maybeMakeComputerMove", id);
 
   return id;
 })
@@ -128,6 +128,7 @@ async function _performMove(
 ) {
   let nextState = validateMove(state, player, from, to);
   if (!nextState) {
+    console.log(`invalid move ${from}-${to}`);
     // Invalid move.
     return;
   }
@@ -137,7 +138,7 @@ async function _performMove(
     finished: nextState.isGameOver(),
   });
 
-  scheduler.runAfter(1000, "games:maybeMakeComputerMove", state._id);
+  scheduler.runAfter(1000, "actions/engine:maybeMakeComputerMove", state._id);
 }
 
 export const move = mutation(async (
@@ -161,18 +162,18 @@ export const move = mutation(async (
   await _performMove(db, userId, scheduler, state, from, to);
 })
 
-export const maybeMakeComputerMove = mutation(async (
-  ctx: any,
+export const internalGetPgnForComputerMove = query(async (
+  {db},
   id: Id<"games">,
 ) => {
-  const { db, auth, scheduler } = ctx;
   let state = await db.get(id);
   if (state == null) {
     throw new Error(`Invalid game ${id}`);
   }
 
   if (getCurrentPlayer(state) !== "Computer") {
-    return;
+    console.log("it's not the computer's turn");
+    return null;
   }
 
   const game = new Chess();
@@ -180,9 +181,24 @@ export const maybeMakeComputerMove = mutation(async (
 
   const possibleMoves = game.moves({ verbose: true });
   if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0) {
+    console.log("no moves");
+    return null;
+  }
+  return state.pgn;
+})
+
+export const internalMakeComputerMove = mutation(async (
+  {db, scheduler},
+  id: Id<"games">,
+  moveFrom: string,
+  moveTo: string,
+) => {
+  let state = await db.get(id);
+  if (state == null) {
+    throw new Error(`Invalid game ${id}`);
+  }
+  if (getCurrentPlayer(state) !== "Computer") {
     return;
   }
-  const randomIndex = Math.floor(Math.random() * possibleMoves.length);
-  const move = possibleMoves[randomIndex] as Move;
-  await _performMove(db, "Computer", scheduler, state, move.from, move.to);
+  await _performMove(db, "Computer", scheduler, state, moveFrom, moveTo);
 })
