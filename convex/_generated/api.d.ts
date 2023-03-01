@@ -12,6 +12,7 @@
 import type { ApiFromModules } from "convex/api";
 import type * as actions_engine from "../actions/engine";
 import type * as games from "../games";
+import type * as search from "../search";
 import type * as users from "../users";
 import type * as utils from "../utils";
 
@@ -27,6 +28,7 @@ import type * as utils from "../utils";
 export type API = ApiFromModules<{
   "actions/engine": typeof actions_engine;
   games: typeof games;
+  search: typeof search;
   users: typeof users;
   utils: typeof utils;
 }>;

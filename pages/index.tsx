@@ -1,7 +1,6 @@
 import { FormEvent } from 'react'
 
 import { useMutation, useQuery } from '../convex/_generated/react'
-import { Document, Id } from "../convex/_generated/dataModel";
 import { isOpen, hasPlayer } from "../convex/utils"
 import { gameTitle } from "../common"
 
