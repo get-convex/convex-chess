@@ -202,29 +202,3 @@ export const internalMakeComputerMove = mutation(async (
   }
   await _performMove(db, "Computer", scheduler, state, moveFrom, moveTo);
 })
-
-export const maybeMakeComputerMove = mutation(async (
-  ctx: any,
-  id: Id<"games">,
-) => {
-  const { db, auth, scheduler } = ctx;
-  let state = await db.get(id);
-  if (state == null) {
-    throw new Error(`Invalid game ${id}`);
-  }
-
-  if (getCurrentPlayer(state) !== "Computer") {
-    return;
-  }
-
-  const game = new Chess();
-  game.loadPgn(state.pgn);
-
-  const possibleMoves = game.moves({ verbose: true });
-  if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0) {
-    return;
-  }
-  const randomIndex = Math.floor(Math.random() * possibleMoves.length);
-  const move = possibleMoves[randomIndex] as Move;
-  await _performMove(db, "Computer", scheduler, state, move.from, move.to);
-})
