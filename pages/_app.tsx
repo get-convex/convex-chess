@@ -10,7 +10,6 @@ import { useState } from 'react';
 import { useQuery } from '../convex/_generated/react';
 import Link from 'next/link';
 import { gameTitle } from '../common';
-import { DenormalizedGame } from '../convex/games';
 
 const authInfo = convexConfig.authInfo[0];
 
