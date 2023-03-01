@@ -1,7 +1,5 @@
 import { Id } from "../_generated/dataModel";
-import type { ActionCtx } from "../_generated/server";
 import { action } from "../_generated/server";
-// @ts-ignore
 const jsChessEngine = require('js-chess-engine')
 import { Chess } from "chess.js";
 
