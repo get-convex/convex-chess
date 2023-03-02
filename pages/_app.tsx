@@ -65,8 +65,8 @@ function MyApp({ Component, pageProps }: AppProps) {
                   <td>
                     {
                     result._id.tableName == "games" ?
-                      <Link href={`play?gameId=${result._id.id}`}>{gameTitle(result as GameResult)}</Link> :
-                      <Link href={`user?userId=${result._id.id}`}>{(result as any).name}</Link>
+                      <Link href={`play/${result._id.id}`}>{gameTitle(result as GameResult)}</Link> :
+                      <Link href={`user/${result._id.id}`}>{(result as any).name}</Link>
                     }
                   </td>
                 </tr>

@@ -45,13 +45,13 @@ export default function() {
     }
     event.preventDefault();
     const id = await startNewGame(player1, player2);
-    router.push({ pathname: "/play", query: { gameId: id.id } });
+    router.push({ pathname: `/play/${id.id}`});
   }
 
   async function join(event: FormEvent) {
     event.preventDefault();
     const gameId = (event.nativeEvent as any).submitter.id ?? "";
-    router.push({ pathname: "/play", query: { gameId } });
+    router.push({ pathname: `/play/${gameId}`});
   }
 
   return (
