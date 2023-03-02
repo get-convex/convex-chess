@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useQuery } from '../convex/_generated/react';
 import Link from 'next/link';
 import { gameTitle } from '../common';
-import { GameResult } from '../convex/search';
+import { Game } from '../convex/search';
 
 const authInfo = convexConfig.authInfo[0];
 
@@ -41,6 +41,8 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   const [searchInput, setSearchInput] = useState("");
 
+  const userId = useQuery("users:getMyUser") || null;
+
   const handleChange = (e: any) => {
     e.preventDefault();
     setSearchInput(e.target.value);
@@ -65,8 +67,8 @@ function MyApp({ Component, pageProps }: AppProps) {
                   <td>
                     {
                     result._id.tableName == "games" ?
-                      <Link href={`play/${result._id.id}`}>{gameTitle(result as GameResult)}</Link> :
-                      <Link href={`user/${result._id.id}`}>{(result as any).name}</Link>
+                      <Link href={`/play/${result._id.id}`}>{gameTitle(result as Game)}</Link> :
+                      <Link href={`/user/${result._id.id}`}>{(result as any).name}</Link>
                     }
                   </td>
                 </tr>
@@ -79,7 +81,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           {
           user ?
             <div>
-              <span>Logged in{ user.name ? ` as ${user.name}` : "" }</span>
+              <Link className="profileLink" href={`/user/${userId}`}>{ user.name }</Link>
               <button className="btn btn-secondary" onClick={() => logout({returnTo: window.location.origin})}>Logout</button>
             </div>
           : <button className="btn btn-secondary" onClick={loginWithRedirect}>Login</button>

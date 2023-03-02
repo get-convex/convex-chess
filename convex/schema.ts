@@ -20,6 +20,7 @@ export default defineSchema({
   users: defineTable({
     name: s.string(),
     tokenIdentifier: s.string(),
+    profilePic: s.union(s.string(), s.null()),
   })
   .index("by_token", ["tokenIdentifier"])
   .searchIndex("search_name", { searchField: "name" }),

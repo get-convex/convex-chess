@@ -12,7 +12,7 @@ export default function() {
   const gameId = new Id("games", router.query.id as string);
 
   const gameState = useQuery('games:get', gameId)
-  const userId = useQuery("users:getUser") ?? null;
+  const userId = useQuery("users:getMyUser") ?? null;
 
   const performMove = useMutation('games:move').withOptimisticUpdate(
     (localStore, gameId, from, to) => {
