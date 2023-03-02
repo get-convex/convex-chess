@@ -12,7 +12,7 @@
   "dependencies": {
     "@auth0/auth0-react": "^1.12.1",
     "chess.js": "^1.0.0-alpha.0",
-    "convex": "^0.9.1",
+    "convex": "file:convex-0.9.1.tgz",
     "js-chess-engine": "^1.0.2",
     "next": "latest",
     "react": "^18.2.0",

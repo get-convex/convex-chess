@@ -23,7 +23,7 @@ async function playerName(
   }
 }
 
-async function denormalizePlayerNames(
+export async function denormalizePlayerNames(
   db: DatabaseReader,
   game: Document<"games">,
 ) {
@@ -55,12 +55,10 @@ export const ongoingGames = query(async ({ db }) => {
 })
 
 export const newGame = mutation(async (
-  ctx: any,
+  { db, auth, scheduler },
   player1Arg: null | "Computer" | "Me",
   player2Arg: null | "Computer" | "Me",
 ) => {
-  const { db, auth, scheduler } = ctx;
-
   const userId = await getOrCreateUser(db, auth);
   let player1 : PlayerId;
   if (player1Arg === "Me") {
@@ -142,12 +140,11 @@ async function _performMove(
 }
 
 export const move = mutation(async (
-  ctx: any,
+  { db, auth, scheduler },
   id: Id<"games">,
   from: string,
   to: string,
 ) => {
-  const { db, auth, scheduler } = ctx;
   const userId = await getOrCreateUser(db, auth);
   if (!userId) {
     throw new Error("Trying to perform a move with unauthenticated user");

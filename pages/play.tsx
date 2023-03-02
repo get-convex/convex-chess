@@ -78,7 +78,7 @@ export default function() {
           <table>
             <tbody>
             {
-              turns.reverse().map((turn, i) => (
+              turns.map((turn, i) => (
                 <tr key={i}>
                   <td className="moveNumber">{turn.num}.</td>
                   <td className="moveSquare">{turn.whiteMove}</td>

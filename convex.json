@@ -3,5 +3,10 @@
   "team": "convex",
   "prodUrl": "https://wandering-fish-513.convex.cloud",
   "functions": "convex/",
-  "authInfo": []
+  "authInfo": [
+    {
+      "domain": "https://convexdev.us.auth0.com/",
+      "applicationID": "tPilWp4HDDF4yoi3D995XMrVIJhflD4V"
+    }
+  ]
 }
