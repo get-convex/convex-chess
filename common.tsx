@@ -1,8 +1,21 @@
-import { Document } from "./convex/_generated/dataModel";
+import Link from "next/link";
+import { Game } from "./convex/search";
+import { Id } from "./convex/_generated/dataModel";
 
-export function gameTitle(state: { player1Name: string, player2Name: string }) {
-    const player1Span = state.player1Name ? (<span className="whitePlayer">{state.player1Name}</span>) : (<></>)
-    const player2Span = state.player2Name ? (<span className="blackPlayer">{state.player2Name}</span>) : (<></>)
+function getProfileLink(className: string, name: string, id: string | Id<"users"> | null) {
+  if (!id) {
+    return <></>;
+  }
+  if (typeof id == "string") {
+    return <span className={className}>{name}</span>
+  } else {
+    return <Link className={className} href={`/user/${id}`}>{name}</Link>
+  }
+}
+
+export function gameTitle(state: Game) {
+    const player1Span = getProfileLink("whitePlayer", state.player1Name, state.player1);
+    const player2Span = getProfileLink("blackPlayer", state.player2Name, state.player2);
     if (state.player1Name && state.player2Name) {
       return (
         <div>

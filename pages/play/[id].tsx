@@ -2,17 +2,17 @@ import { useRouter } from 'next/router'
 import { Chess, Move } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
-import { useMutation, useQuery } from '../convex/_generated/react'
-import { Id } from "../convex/_generated/dataModel";
-import { validateMove, isOpen, playerEquals } from "../convex/utils"
-import { gameTitle } from "../common"
+import { useMutation, useQuery } from '../../convex/_generated/react'
+import { Id } from "../../convex/_generated/dataModel";
+import { validateMove, isOpen, playerEquals } from "../../convex/utils"
+import { gameTitle } from "../../common"
 
 export default function() {
   const router = useRouter();
-  const gameId = new Id("games", router.query.gameId as string);
+  const gameId = new Id("games", router.query.id as string);
 
   const gameState = useQuery('games:get', gameId)
-  const userId = useQuery("users:getUser") ?? null;
+  const userId = useQuery("users:getMyUser") ?? null;
 
   const performMove = useMutation('games:move').withOptimisticUpdate(
     (localStore, gameId, from, to) => {
