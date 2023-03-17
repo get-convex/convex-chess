@@ -1,8 +1,8 @@
 import { denormalizePlayerNames } from "./games";
-import { Document } from "./_generated/dataModel";
+import { Doc } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 
-export interface Game extends Document<"games"> {
+export interface Game extends Doc<"games"> {
     player1Name: string,
     player2Name: string,
 };
@@ -14,7 +14,7 @@ export default query(async ({ db }, query: string) => {
     const games = await db.query("games").withSearchIndex("search_pgn",  q =>
         q.search("pgn", query)
     ).collect();
-    let results : (Game|Document<"users">)[] = [];
+    let results : (Game|Doc<"users">)[] = [];
     results = results.concat(users);
     for (const game of games) {
         results.push(await denormalizePlayerNames(db, game));

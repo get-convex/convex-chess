@@ -1,5 +1,5 @@
 import { query, mutation, DatabaseWriter, DatabaseReader } from './_generated/server'
-import { Id, Document } from "./_generated/dataModel";
+import { Id, Doc } from "./_generated/dataModel";
 
 import { getCurrentPlayer, validateMove, PlayerId } from "./utils"
 
@@ -25,7 +25,7 @@ async function playerName(
 
 export async function denormalizePlayerNames(
   db: DatabaseReader,
-  game: Document<"games">,
+  game: Doc<"games">,
 ) {
   return {
     ...game,
@@ -120,7 +120,7 @@ async function _performMove(
   db: DatabaseWriter,
   player: PlayerId,
   scheduler: any,
-  state: Document<"games">,
+  state: Doc<"games">,
   from: string,
   to: string,
 ) {

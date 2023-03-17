@@ -52,7 +52,7 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <div>
       <div className="convexImage">
-        <a href="/"><img src="convex.svg"></img></a>
+        <a href="/"><img src="/convex.svg"></img></a>
         <div>
           <input
             type="text"
@@ -82,9 +82,9 @@ function MyApp({ Component, pageProps }: AppProps) {
           user ?
             <div>
               <Link className="profileLink" href={`/user/${userId}`}>{ user.name }</Link>
-              <button className="btn btn-secondary" onClick={() => logout({returnTo: window.location.origin})}>Logout</button>
+              <button className="btn btn-secondary" onClick={() => logout()}>Logout</button>
             </div>
-          : <button className="btn btn-secondary" onClick={loginWithRedirect}>Login</button>
+          : <button className="btn btn-secondary" onClick={() => loginWithRedirect()}>Login</button>
           }
       </div>
       <Component {...pageProps} />

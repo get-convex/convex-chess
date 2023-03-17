@@ -71,7 +71,7 @@ export default function() {
       <div>{gameTitle(gameState)}</div>
       <div className="game">
         <div className="board">
-          <Chessboard position={game.fen()} onPieceDrop={onDrop} boardOrientation={boardOrientation} />
+          <Chessboard boardWidth={560} position={game.fen()} onPieceDrop={onDrop} boardOrientation={boardOrientation} />
         </div>
         <div className="moves">
           Moves
