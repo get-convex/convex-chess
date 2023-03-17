@@ -29,6 +29,13 @@ export function getCurrentPlayer(state: Doc<"games">) : PlayerId {
     return result as any;
 }
 
+export function getNextPlayer(state: Doc<"games">) : PlayerId {
+    const game = new Chess();
+    game.loadPgn(state.pgn);
+    let result = (game.turn() == 'w') ? state.player2 : state.player1;
+    return result as any;
+}
+
 export function validateMove(
   state: Doc<"games">,
   player: PlayerId,

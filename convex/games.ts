@@ -1,7 +1,7 @@
 import { query, mutation, DatabaseWriter, DatabaseReader } from './_generated/server'
 import { Id, Doc } from "./_generated/dataModel";
 
-import { getCurrentPlayer, validateMove, PlayerId } from "./utils"
+import { getCurrentPlayer, validateMove, PlayerId, getNextPlayer } from "./utils"
 
 import { Chess, Move } from "chess.js";
 import { getOrCreateUser } from './users';
@@ -181,7 +181,20 @@ export const internalGetPgnForComputerMove = query(async (
     console.log("no moves");
     return null;
   }
-  return state.pgn;
+
+  const opponent = getNextPlayer(state);
+  let strategy = 'default';
+  if (opponent instanceof Id) {
+    const opponentPlayer = await db.get(opponent as Id<'users'>);
+    const name = opponentPlayer!.name.toLowerCase();
+    if (name.includes('nipunn')) {
+      strategy = 'tricky';
+    } else if (name.includes('preslav')) {
+      strategy = 'hard';
+    }
+  }
+
+  return [state.pgn, strategy];
 })
 
 export const internalMakeComputerMove = mutation(async (
