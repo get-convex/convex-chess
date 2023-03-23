@@ -1,86 +1,92 @@
-import { Id } from "./_generated/dataModel";
-import { DatabaseReader, DatabaseWriter, mutation, query } from "./_generated/server";
+import { Id } from './_generated/dataModel'
+import {
+  DatabaseReader,
+  DatabaseWriter,
+  mutation,
+  query,
+} from './_generated/server'
 
 export const getOrCreateUser = async (db: DatabaseWriter, auth: any) => {
-  const identity = await auth.getUserIdentity();
+  const identity = await auth.getUserIdentity()
   if (!identity) {
-    return null;
+    return null
   }
 
   // Check if we've already stored this identity before.
   const user = await db
-    .query("users")
-    .withIndex("by_token", q =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier)
+    .query('users')
+    .withIndex('by_token', (q) =>
+      q.eq('tokenIdentifier', identity.tokenIdentifier)
     )
-    .unique();
+    .unique()
 
   if (user !== null) {
     // If we've seen this identity before but the name has changed, patch the value.
     if (user.name != identity.name) {
-      await db.patch(user._id, { name: identity.name });
+      await db.patch(user._id, { name: identity.name })
     }
-    return user._id;
+    return user._id
   }
   // If it's a new identity, create a new `User`.
-  return db.insert("users", {
+  return db.insert('users', {
     name: identity.name,
     tokenIdentifier: identity.tokenIdentifier,
     profilePic: null,
-  });
+  })
 }
 
-export const getMyUser = query(async ({db, auth}) => {
-  const identity = await auth.getUserIdentity();
+export const getMyUser = query(async ({ db, auth }) => {
+  const identity = await auth.getUserIdentity()
   if (!identity) {
-    return null;
+    return null
   }
 
   const user = await db
-    .query("users")
-    .withIndex("by_token", q =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier)
+    .query('users')
+    .withIndex('by_token', (q) =>
+      q.eq('tokenIdentifier', identity.tokenIdentifier)
     )
-    .unique();
+    .unique()
 
-  return user?._id;
-});
+  return user?._id
+})
 
-
-export const get = query(async ({db, storage}, id: Id<"users">) => {
-  const user = await db.get(id);
-  let profilePicUrl = null;
+export const get = query(async ({ db, storage }, id: Id<'users'>) => {
+  const user = await db.get(id)
+  let profilePicUrl = null
   if (user?.profilePic) {
-    profilePicUrl = await storage.getUrl(user.profilePic);
+    profilePicUrl = await storage.getUrl(user.profilePic)
   }
   return {
     ...user,
     profilePicUrl,
   }
-});
+})
 
 // Generate a short-lived upload URL.
 export const generateUploadUrl = mutation(async ({ storage }) => {
-  return await storage.generateUploadUrl();
-});
+  return await storage.generateUploadUrl()
+})
 
 // Save the storage ID within a message.
-export const setProfilePic = mutation(async ({ db, auth }, storageId: string) => {
-  const identity = await auth.getUserIdentity();
-  if (!identity) {
-    return null;
+export const setProfilePic = mutation(
+  async ({ db, auth }, storageId: string) => {
+    const identity = await auth.getUserIdentity()
+    if (!identity) {
+      return null
+    }
+
+    const user = await db
+      .query('users')
+      .withIndex('by_token', (q) =>
+        q.eq('tokenIdentifier', identity.tokenIdentifier)
+      )
+      .unique()
+
+    if (user === null) {
+      throw new Error('Updating profile pic for missing user')
+    }
+
+    db.patch(user._id, { profilePic: storageId })
   }
-
-  const user = await db
-    .query("users")
-    .withIndex("by_token", q =>
-      q.eq("tokenIdentifier", identity.tokenIdentifier)
-    )
-    .unique();
-
-  if (user === null) {
-    throw new Error("Updating profile pic for missing user");
-  }
-
-  db.patch(user._id, {profilePic: storageId})
-});
+)
