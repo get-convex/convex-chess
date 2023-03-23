@@ -1,12 +1,12 @@
 {
-  "project": "convex-chess-4f031",
-  "team": "convex",
-  "prodUrl": "https://wandering-fish-513.convex.cloud",
+  "prodUrl": "http://localhost:8000",
+  "project": "carnitas",
+  "team": "carnitas",
   "functions": "convex/",
   "authInfo": [
     {
-      "domain": "https://convexdev.us.auth0.com/",
-      "applicationID": "tPilWp4HDDF4yoi3D995XMrVIJhflD4V"
+      "domain": "https://dev-ym76c1n8lq5l2pqy.us.auth0.com",
+      "applicationID": "DeZ7xmksjpnuTQ5lHIgMHbm6yGVTQ6Lr"
     }
   ]
 }
