@@ -1,7 +1,7 @@
 {
-  "prodUrl": "http://localhost:8000",
-  "project": "carnitas",
-  "team": "carnitas",
+  "project": "convex-chess",
+  "team": "sshader",
+  "prodUrl": "http://localhost:23081",
   "functions": "convex/",
   "authInfo": [
     {
