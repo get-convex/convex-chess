@@ -5,7 +5,7 @@ import { ConvexReactClient } from 'convex/react'
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0'
 
 import convexConfig from '../convex.json'
-import { useAuth0 } from '@auth0/auth0-react'
+import { Auth0Provider, useAuth0 } from '@auth0/auth0-react'
 import { useState } from 'react'
 import { useQuery } from '../convex/_generated/react'
 import Link from 'next/link'
@@ -23,13 +23,18 @@ const convex = new ConvexReactClient(address)
 function App(props: AppProps) {
   return (
     <div>
-      <ConvexProviderWithAuth0
-        client={convex}
-        authInfo={authInfo}
-        loggedOut={<MyApp {...props} />}
+      <Auth0Provider
+        domain="https://dev-ym76c1n8lq5l2pqy.us.auth0.com"
+        clientId="DeZ7xmksjpnuTQ5lHIgMHbm6yGVTQ6Lr"
+        authorizationParams={{
+          redirect_uri:
+            typeof window !== 'undefined' ? window.location.origin : '',
+        }}
       >
-        <MyApp {...props} />
-      </ConvexProviderWithAuth0>
+        <ConvexProviderWithAuth0 client={convex}>
+          <MyApp {...props} />
+        </ConvexProviderWithAuth0>
+      </Auth0Provider>
     </div>
   )
 }
