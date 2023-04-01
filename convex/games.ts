@@ -15,14 +15,12 @@ import {
 
 import { Chess, Move } from 'chess.js'
 import { getOrCreateUser } from './users'
+import { Game } from './search'
 
-async function playerName(
-  db: DatabaseReader,
-  playerId: Id<'users'> | string | null
-) {
+async function playerName(db: DatabaseReader, playerId: PlayerId) {
   if (playerId === null) {
     return ''
-  } else if (typeof playerId == 'string') {
+  } else if (playerId === 'Computer') {
     return playerId
   } else {
     const user = await db.get(playerId)
@@ -36,15 +34,19 @@ async function playerName(
 export async function denormalizePlayerNames(
   db: DatabaseReader,
   game: Doc<'games'>
-) {
+): Promise<Game> {
   return {
     ...game,
+    kind: 'Game',
     player1Name: await playerName(db, game.player1),
     player2Name: await playerName(db, game.player2),
   }
 }
 
 export const get = query(async ({ db }, id: Id<'games'>) => {
+  if (!db.isInTable('games', id)) {
+    throw new Error(`Invalid game ${id}`)
+  }
   const game = await db.get(id)
   if (!game) {
     throw new Error(`Invalid game ${id}`)
@@ -55,12 +57,14 @@ export const get = query(async ({ db }, id: Id<'games'>) => {
 export const ongoingGames = query(async ({ db }) => {
   const games = await db
     .query('games')
-    .withIndex('finished', (q) => q.eq('finished', false))
+    // .withIndex('finished', (q) => q.eq('finished', false))
     .order('desc')
     .take(50)
   const result = []
   for (let game of games) {
-    result.push(await denormalizePlayerNames(db, game))
+    if (game.finished === false) {
+      result.push(await denormalizePlayerNames(db, game))
+    }
   }
   return result
 })
@@ -115,11 +119,11 @@ export const joinGame = mutation(async ({ db, auth }, id: Id<'games'>) => {
     throw new Error(`Invalid game ${id}`)
   }
 
-  if (!state.player1 && !user.equals(state.player2)) {
+  if (!state.player1 && user !== state.player2) {
     await db.patch(id, {
       player1: user,
     })
-  } else if (!state.player2 && !user.equals(state.player1)) {
+  } else if (!state.player2 && user !== state.player1) {
     await db.patch(id, {
       player2: user,
     })
@@ -141,6 +145,7 @@ async function _performMove(
     return
   }
 
+  console.log(state)
   await db.patch(state._id, {
     pgn: nextState.pgn(),
     finished: nextState.isGameOver(),
@@ -194,8 +199,8 @@ export const internalGetPgnForComputerMove = query(
 
     const opponent = getNextPlayer(state)
     let strategy = 'default'
-    if (opponent instanceof Id) {
-      const opponentPlayer = await db.get(opponent as Id<'users'>)
+    if (opponent !== null && db.isInTable('users', opponent)) {
+      const opponentPlayer = await db.get(opponent)
       const name = opponentPlayer!.name.toLowerCase()
       if (name.includes('nipunn')) {
         strategy = 'tricky'

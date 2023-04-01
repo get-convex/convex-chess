@@ -9,9 +9,10 @@ import { gameTitle } from '../../common'
 
 export default function () {
   const router = useRouter()
-  const gameId = new Id('games', router.query.id as string)
+  const idStr = router.query.id as string
+  const gameId = idStr as Id<'games'>
 
-  const gameState = useQuery('games:get', gameId)
+  const gameState = useQuery('games:get', gameId!)
   const userId = useQuery('users:getMyUser') ?? null
 
   const performMove = useMutation('games:move').withOptimisticUpdate(

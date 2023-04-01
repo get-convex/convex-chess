@@ -1,11 +1,11 @@
 {
   "project": "convex-chess",
   "team": "sshader",
-  "prodUrl": "http://localhost:23081",
+  "prodUrl": "http://localhost:15982",
   "functions": "convex/",
   "authInfo": [
     {
-      "domain": "https://dev-ym76c1n8lq5l2pqy.us.auth0.com",
+      "domain": "https://dev-ym76c1n8lq5l2pqy.us.auth0.com/",
       "applicationID": "DeZ7xmksjpnuTQ5lHIgMHbm6yGVTQ6Lr"
     }
   ]

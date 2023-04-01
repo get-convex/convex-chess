@@ -13,14 +13,15 @@ export const getOrCreateUser = async (db: DatabaseWriter, auth: any) => {
   }
 
   // Check if we've already stored this identity before.
-  const user = await db
-    .query('users')
-    .withIndex('by_token', (q) =>
-      q.eq('tokenIdentifier', identity.tokenIdentifier)
-    )
-    .unique()
-
-  if (user !== null) {
+  const users = await db.query('users').collect()
+  // .withIndex('by_token', (q) =>
+  //   q.eq('tokenIdentifier', identity.tokenIdentifier)
+  // )
+  // .unique()
+  const user = users.filter(
+    (u) => u.tokenIdentifier === identity.tokenIdentifier
+  )[0]
+  if (user !== undefined) {
     // If we've seen this identity before but the name has changed, patch the value.
     if (user.name != identity.name) {
       await db.patch(user._id, { name: identity.name })
@@ -41,12 +42,14 @@ export const getMyUser = query(async ({ db, auth }) => {
     return null
   }
 
-  const user = await db
-    .query('users')
-    .withIndex('by_token', (q) =>
-      q.eq('tokenIdentifier', identity.tokenIdentifier)
-    )
-    .unique()
+  const users = await db.query('users').collect()
+  // .withIndex('by_token', (q) =>
+  //   q.eq('tokenIdentifier', identity.tokenIdentifier)
+  // )
+  // .unique()
+  const user = users.filter(
+    (u) => u.tokenIdentifier === identity.tokenIdentifier
+  )[0]
 
   return user?._id
 })
@@ -76,14 +79,16 @@ export const setProfilePic = mutation(
       return null
     }
 
-    const user = await db
-      .query('users')
-      .withIndex('by_token', (q) =>
-        q.eq('tokenIdentifier', identity.tokenIdentifier)
-      )
-      .unique()
+    const users = await db.query('users').collect()
+    // .withIndex('by_token', (q) =>
+    //   q.eq('tokenIdentifier', identity.tokenIdentifier)
+    // )
+    // .unique()
+    const user = users.filter(
+      (u) => u.tokenIdentifier === identity.tokenIdentifier
+    )[0]
 
-    if (user === null) {
+    if (user === undefined) {
       throw new Error('Updating profile pic for missing user')
     }
 

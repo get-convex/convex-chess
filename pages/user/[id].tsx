@@ -6,7 +6,7 @@ import { useRef, useState } from 'react'
 
 export default function () {
   const router = useRouter()
-  const userId = new Id('users', router.query.id as string)
+  const userId = router.query.id as Id<'users'>
   const user = useQuery('users:get', userId) || null
   const myUserId = useQuery('users:getMyUser') ?? null
 
@@ -34,8 +34,6 @@ export default function () {
     await setProfilePic(storageId)
   }
 
-  console.log()
-
   return (
     <main>
       {user?.profilePicUrl ? (
@@ -49,7 +47,7 @@ export default function () {
         </div>
       )}
       <div>{user?.name}</div>
-      {user && user._id?.equals(myUserId) ? (
+      {user && user._id === myUserId ? (
         <form onSubmit={handleSetProfilePic}>
           <input
             type="file"

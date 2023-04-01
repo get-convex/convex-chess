@@ -45,7 +45,7 @@ export default function () {
     }
     event.preventDefault()
     const id = await startNewGame(player1, player2)
-    router.push({ pathname: `/play/${id.id}` })
+    router.push({ pathname: `/play/${id}` })
   }
 
   async function join(event: FormEvent) {

@@ -1,3 +1,4 @@
+'use node'
 import { Id } from '../_generated/dataModel'
 import { action } from '../_generated/server'
 const jsChessEngine = require('js-chess-engine')

@@ -69,14 +69,14 @@ function MyApp({ Component, pageProps }: AppProps) {
         <table>
           <tbody>
             {searchResults.map((result) => (
-              <tr key={result._id.id}>
+              <tr key={result._id}>
                 <td>
-                  {result._id.tableName == 'games' ? (
-                    <Link href={`/play/${result._id.id}`}>
+                  {result.kind == 'Game' ? (
+                    <Link href={`/play/${result._id}`}>
                       {gameTitle(result as Game)}
                     </Link>
                   ) : (
-                    <Link href={`/user/${result._id.id}`}>
+                    <Link href={`/user/${result._id}`}>
                       {(result as any).name}
                     </Link>
                   )}

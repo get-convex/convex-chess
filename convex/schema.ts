@@ -1,10 +1,13 @@
-import { defineSchema, defineTable, s } from 'convex/schema'
+import { defineSchema, defineTable } from 'convex/schema'
+import { v as s } from 'convex/values'
+
+export const player = s.union(s.id('users'), s.literal('Computer'), s.null())
 
 export default defineSchema({
   games: defineTable({
     pgn: s.string(),
-    player1: s.union(s.id('users'), s.literal<string>('Computer'), s.null()),
-    player2: s.union(s.id('users'), s.literal<string>('Computer'), s.null()),
+    player1: player,
+    player2: player,
     finished: s.boolean(),
   })
     .index('finished', ['finished'])

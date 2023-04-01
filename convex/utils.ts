@@ -1,16 +1,16 @@
 import { Chess } from 'chess.js'
-import { Doc, Id } from '../convex/_generated/dataModel'
+import { Infer } from 'convex/values'
+import { Doc } from '../convex/_generated/dataModel'
+import { player } from '../convex/schema'
 
-export type PlayerId = Id<'users'> | 'Computer' | null
+export type PlayerId = Infer<typeof player>
 
 export function playerEquals(player1: PlayerId, player2: PlayerId) {
   if (!player1) {
     // null is not equal to null.
     return false
   }
-  return typeof player1 == 'string'
-    ? player1 == player2
-    : player1.equals(player2)
+  return player1 === player2
 }
 
 export function isOpen(state: Doc<'games'>): boolean {
