@@ -57,7 +57,7 @@ export const get = query(async ({ db }, id: Id<'games'>) => {
 export const ongoingGames = query(async ({ db }) => {
   const games = await db
     .query('games')
-    // .withIndex('finished', (q) => q.eq('finished', false))
+    .withIndex('finished', (q) => q.eq('finished', false))
     .order('desc')
     .take(50)
   const result = []
