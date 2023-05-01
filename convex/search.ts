@@ -7,7 +7,7 @@ export interface Game extends Doc<"games"> {
     player2Name: string,
 };
 
-export default query(async ({ db }, query: string) => {
+export default query(async ({ db }, { query }: { query: string; }) => {
     const users = await db.query("users").withSearchIndex("search_name", q =>
         q.search("name", query)
     ).collect();

@@ -1,4 +1,4 @@
-import { query, mutation, DatabaseWriter, DatabaseReader } from './_generated/server'
+import { query, mutation, DatabaseWriter, DatabaseReader, internalMutation } from './_generated/server'
 import { Id, Doc } from "./_generated/dataModel";
 
 import { getCurrentPlayer, validateMove, PlayerId, getNextPlayer } from "./utils"
@@ -34,7 +34,7 @@ export async function denormalizePlayerNames(
   }
 }
 
-export const get = query(async ({ db }, id: Id<"games">) => {
+export const get = query(async ({ db }, { id } : { id: Id<"games">; }) => {
   const game = await db.get(id);
   if (!game) {
     throw new Error(`Invalid game ${id}`);
@@ -55,46 +55,47 @@ export const ongoingGames = query(async ({ db }) => {
 })
 
 export const newGame = mutation(async (
-  { db, auth, scheduler },
-  player1Arg: null | "Computer" | "Me",
-  player2Arg: null | "Computer" | "Me",
+  { db, auth, scheduler }, { player1, player2 } : {
+    player1: null | "Computer" | "Me";
+    player2: null | "Computer" | "Me";
+  }
 ) => {
   const userId = await getOrCreateUser(db, auth);
-  let player1 : PlayerId;
-  if (player1Arg === "Me") {
+  let player1Id : PlayerId;
+  if (player1 === "Me") {
     if (!userId) {
       throw new Error("Can't play as unauthenticated user");
     }
-    player1 = userId;
+    player1Id = userId;
   } else {
-    player1 = player1Arg;
+    player1Id = player1;
   }
-  let player2 : PlayerId;
-  if (player2Arg === "Me") {
+  let player2Id : PlayerId;
+  if (player2 === "Me") {
     if (!userId) {
       throw new Error("Can't play as unauthenticated user");
     }
-    player2 = userId;
+    player2Id = userId;
   } else {
-    player2 = player2Arg;
+    player2Id = player2;
   }
 
   const game = new Chess();
   const id = await db.insert('games', {
     pgn: game.pgn(),
-    player1,
-    player2,
+    player1: player1Id,
+    player2: player2Id,
     finished: false,
   });
 
-  scheduler.runAfter(1000, "actions/engine:maybeMakeComputerMove", id);
+  scheduler.runAfter(1000, "engine:maybeMakeComputerMove", { id });
 
   return id;
 })
 
 export const joinGame = mutation(async (
   { db, auth },
-  id: Id<"games">,
+  { id } : { id: Id<"games">; },
 ) => {
   const user = await getOrCreateUser(db, auth);
   if (!user) {
@@ -136,14 +137,12 @@ async function _performMove(
     finished: nextState.isGameOver(),
   });
 
-  scheduler.runAfter(1000, "actions/engine:maybeMakeComputerMove", state._id);
+  scheduler.runAfter(1000, "engine:maybeMakeComputerMove", { id: state._id });
 }
 
 export const move = mutation(async (
   { db, auth, scheduler },
-  id: Id<"games">,
-  from: string,
-  to: string,
+  { gameId, from, to }: { gameId: Id<"games">; from: string; to: string; }
 ) => {
   const userId = await getOrCreateUser(db, auth);
   if (!userId) {
@@ -151,9 +150,9 @@ export const move = mutation(async (
   }
 
   // Load the game.
-  let state = await db.get(id);
+  let state = await db.get(gameId);
   if (state == null) {
-    throw new Error(`Invalid game ${id}`);
+    throw new Error(`Invalid game ${gameId}`);
   }
 
   await _performMove(db, userId, scheduler, state, from, to);
@@ -161,7 +160,7 @@ export const move = mutation(async (
 
 export const internalGetPgnForComputerMove = query(async (
   {db},
-  id: Id<"games">,
+  { id }: { id: Id<"games">; },
 ) => {
   let state = await db.get(id);
   if (state == null) {
@@ -197,11 +196,13 @@ export const internalGetPgnForComputerMove = query(async (
   return [state.pgn, strategy];
 })
 
-export const internalMakeComputerMove = mutation(async (
+export const internalMakeComputerMove = internalMutation(async (
   {db, scheduler},
-  id: Id<"games">,
-  moveFrom: string,
-  moveTo: string,
+  { id, moveFrom, moveTo } : {
+    id: Id<"games">;
+    moveFrom: string;
+    moveTo: string;
+  }
 ) => {
   let state = await db.get(id);
   if (state == null) {

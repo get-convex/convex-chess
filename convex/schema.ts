@@ -1,26 +1,27 @@
-import { defineSchema, defineTable, s } from 'convex/schema'
+import { defineSchema, defineTable } from 'convex/schema'
+import { v } from 'convex/values'
 
 export default defineSchema({
   games: defineTable({
-    pgn: s.string(),
-    player1: s.union(
-      s.id("users"),
-      s.literal<string>("Computer"),
-      s.null(),
+    pgn: v.string(),
+    player1: v.union(
+      v.id("users"),
+      v.literal<string>("Computer"),
+      v.null(),
     ),
-    player2: s.union(
-      s.id("users"),
-      s.literal<string>("Computer"),
-      s.null(),
+    player2: v.union(
+      v.id("users"),
+      v.literal<string>("Computer"),
+      v.null(),
     ),
-    finished: s.boolean(),
+    finished: v.boolean(),
   })
   .index("finished", ["finished"])
   .searchIndex("search_pgn", { searchField: "pgn" }),
   users: defineTable({
-    name: s.string(),
-    tokenIdentifier: s.string(),
-    profilePic: s.union(s.string(), s.null()),
+    name: v.string(),
+    tokenIdentifier: v.string(),
+    profilePic: v.union(v.string(), v.null()),
   })
   .index("by_token", ["tokenIdentifier"])
   .searchIndex("search_name", { searchField: "name" }),

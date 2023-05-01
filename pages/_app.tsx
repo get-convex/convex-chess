@@ -4,15 +4,12 @@ import type { AppProps } from 'next/app'
 import { ConvexReactClient } from 'convex/react'
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0'
 
-import convexConfig from "../convex.json";
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAuth0, Auth0Provider } from '@auth0/auth0-react';
 import { useState } from 'react';
 import { useQuery } from '../convex/_generated/react';
 import Link from 'next/link';
 import { gameTitle } from '../common';
 import { Game } from '../convex/search';
-
-const authInfo = convexConfig.authInfo[0];
 
 const address = process.env.NEXT_PUBLIC_CONVEX_URL;
 if (!address) {
@@ -23,15 +20,21 @@ const convex = new ConvexReactClient(address);
 function App(props: AppProps) {
   return (
     <div>
-      <ConvexProviderWithAuth0
-          client={convex}
-          authInfo={authInfo}
-          loggedOut={
-            <MyApp {...props} />
-          }
+      <Auth0Provider
+        domain={process.env.NEXT_PUBLIC_AUTH0_DOMAIN!}
+        clientId={process.env.NEXT_PUBLIC_CLIENT_ID!}
+        authorizationParams={{
+          redirect_uri: typeof window !== "undefined" ? window.location.origin : "",
+        }}
+        useRefreshTokens={true}
+        cacheLocation="localstorage"
       >
-        <MyApp {...props} />
-      </ConvexProviderWithAuth0>
+        <ConvexProviderWithAuth0
+          client={convex}
+        >
+          <MyApp {...props} />
+        </ConvexProviderWithAuth0>
+      </Auth0Provider>
     </div>
   )
 }
@@ -48,7 +51,7 @@ function MyApp({ Component, pageProps }: AppProps) {
     setSearchInput(e.target.value);
   };
 
-  const searchResults = useQuery("search", searchInput) || [];
+  const searchResults = useQuery("search", { query: searchInput }) || [];
   return (
     <div>
       <div className="convexImage">
