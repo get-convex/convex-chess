@@ -1,4 +1,5 @@
-import { DatabaseReader, DatabaseWriter, query } from "./_generated/server";
+import { Id } from "./_generated/dataModel";
+import { DatabaseReader, DatabaseWriter, mutation, query } from "./_generated/server";
 
 export const getOrCreateUser = async (db: DatabaseWriter, auth: any) => {
   const identity = await auth.getUserIdentity();
@@ -25,10 +26,11 @@ export const getOrCreateUser = async (db: DatabaseWriter, auth: any) => {
   return db.insert("users", {
     name: identity.name,
     tokenIdentifier: identity.tokenIdentifier,
+    profilePic: null,
   });
 }
 
-export const getUser = query(async ({db, auth}) => {
+export const getMyUser = query(async ({db, auth}) => {
   const identity = await auth.getUserIdentity();
   if (!identity) {
     return null;
@@ -42,4 +44,43 @@ export const getUser = query(async ({db, auth}) => {
     .unique();
 
   return user?._id;
+});
+
+
+export const get = query(async ({db, storage}, { id } : { id: Id<"users"> }) => {
+  const user = await db.get(id);
+  let profilePicUrl = null;
+  if (user?.profilePic) {
+    profilePicUrl = await storage.getUrl(user.profilePic);
+  }
+  return {
+    ...user,
+    profilePicUrl,
+  }
+});
+
+// Generate a short-lived upload URL.
+export const generateUploadUrl = mutation(async ({ storage }) => {
+  return await storage.generateUploadUrl();
+});
+
+// Save the storage ID within a message.
+export const setProfilePic = mutation(async ({ db, auth }, { storageId } : { storageId: string }) => {
+  const identity = await auth.getUserIdentity();
+  if (!identity) {
+    return null;
+  }
+
+  const user = await db
+    .query("users")
+    .withIndex("by_token", q =>
+      q.eq("tokenIdentifier", identity.tokenIdentifier)
+    )
+    .unique();
+
+  if (user === null) {
+    throw new Error("Updating profile pic for missing user");
+  }
+
+  db.patch(user._id, {profilePic: storageId})
 });

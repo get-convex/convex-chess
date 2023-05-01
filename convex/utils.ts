@@ -1,5 +1,5 @@
 import { Chess } from "chess.js";
-import { Document, Id } from "../convex/_generated/dataModel";
+import { Doc, Id } from "../convex/_generated/dataModel";
 
 export type PlayerId = Id<"users"> | "Computer" | null;
 
@@ -11,26 +11,33 @@ export function playerEquals(player1: PlayerId, player2: PlayerId) {
   return (typeof player1 == "string") ? player1 == player2 : player1.equals(player2);
 }
 
-export function isOpen(state: Document<"games">) : boolean {
+export function isOpen(state: Doc<"games">) : boolean {
   return !state.player1 || !state.player2;
 }
 
-export function hasPlayer(state: Document<"games">, player: PlayerId) : boolean {
+export function hasPlayer(state: Doc<"games">, player: PlayerId) : boolean {
   if (!player) {
     return false;
   }
   return playerEquals(state.player1 as any, player) || playerEquals(state.player2 as any, player);
 }
 
-export function getCurrentPlayer(state: Document<"games">) : PlayerId {
+export function getCurrentPlayer(state: Doc<"games">) : PlayerId {
     const game = new Chess();
     game.loadPgn(state.pgn);
     let result = (game.turn() == 'w') ? state.player1 : state.player2;
     return result as any;
 }
 
+export function getNextPlayer(state: Doc<"games">) : PlayerId {
+    const game = new Chess();
+    game.loadPgn(state.pgn);
+    let result = (game.turn() == 'w') ? state.player2 : state.player1;
+    return result as any;
+}
+
 export function validateMove(
-  state: Document<"games">,
+  state: Doc<"games">,
   player: PlayerId,
   from: string,
   to: string,

@@ -39,6 +39,14 @@ h1 {
   padding: 4px 8px 4px 8px;
   font-size: 0.75em;
 }
+.badge a {
+  color: #212529;
+  background-color: #279929;
+  border-radius: 6px;
+  font-weight: bold;
+  padding: 4px 8px 4px 8px;
+  font-size: 0.75em;
+}
 .whitePlayer {
   background-color: #f0f0f0;
   color: #212529;
@@ -153,4 +161,17 @@ button:disabled {
 .convexImage {
   margin-top: 20px;
   margin-left: 20px;
+}
+
+.profileImage {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  font-size: 35px;
+  color: #fff;
+  background-color: #279929;
+  text-align: center;
+  line-height: 150px;
+  margin: 20px 40px;
+  border: 4px solid #000;
 }
