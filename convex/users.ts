@@ -47,7 +47,7 @@ export const getMyUser = query(async ({db, auth}) => {
 });
 
 
-export const get = query(async ({db, storage}, id: Id<"users">) => {
+export const get = query(async ({db, storage}, { id } : { id: Id<"users"> }) => {
   const user = await db.get(id);
   let profilePicUrl = null;
   if (user?.profilePic) {
@@ -65,7 +65,7 @@ export const generateUploadUrl = mutation(async ({ storage }) => {
 });
 
 // Save the storage ID within a message.
-export const setProfilePic = mutation(async ({ db, auth }, storageId: string) => {
+export const setProfilePic = mutation(async ({ db, auth }, { storageId } : { storageId: string }) => {
   const identity = await auth.getUserIdentity();
   if (!identity) {
     return null;

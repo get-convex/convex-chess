@@ -1,15 +1,17 @@
-import { Id } from "../_generated/dataModel";
-import { action } from "../_generated/server";
+"use node";
+
+import { Id } from "./_generated/dataModel";
+import { internalAction } from "./_generated/server";
 const jsChessEngine = require('js-chess-engine')
 import { Chess } from "chess.js";
 
 
-export const maybeMakeComputerMove = action(async (
+export const maybeMakeComputerMove = internalAction(async (
   ctx,
-  id: Id<"games">,
+  { id }: { id: Id<"games"> },
 ) => {
   const { runQuery, runMutation } = ctx;
-  const state = await runQuery('games:internalGetPgnForComputerMove', id);
+  const state = await runQuery('games:internalGetPgnForComputerMove', { id });
   if (state === null) {
     return;
   }
@@ -36,8 +38,10 @@ export const maybeMakeComputerMove = action(async (
   console.log(`move at level ${level}: ${moveFrom}->${moveTo}`);
   await runMutation(
     'games:internalMakeComputerMove',
-    id,
-    moveFrom.toLowerCase(),
-    moveTo.toLowerCase(),
+    {
+      id,
+      moveFrom: moveFrom.toLowerCase(),
+      moveTo: moveTo.toLowerCase(),
+    }
   );
 })

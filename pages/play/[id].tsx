@@ -11,12 +11,12 @@ export default function() {
   const router = useRouter();
   const gameId = new Id("games", router.query.id as string);
 
-  const gameState = useQuery('games:get', gameId)
+  const gameState = useQuery('games:get', { id: gameId })
   const userId = useQuery("users:getMyUser") ?? null;
 
   const performMove = useMutation('games:move').withOptimisticUpdate(
-    (localStore, gameId, from, to) => {
-      const state = localStore.getQuery("games:get", [gameId]);
+    (localStore, { gameId, from, to }) => {
+      const state = localStore.getQuery("games:get", { id: gameId });
       if (state) {
         const game = new Chess();
         game.loadPgn(state.pgn);
@@ -24,7 +24,7 @@ export default function() {
         const newState = { ...state };
         newState.pgn = game.pgn();
         console.log("nextState", game.history(), gameId);
-        localStore.setQuery("games:get", [gameId], newState);
+        localStore.setQuery("games:get", { id: gameId }, newState);
       }
     }
   );
@@ -36,7 +36,7 @@ export default function() {
   }
 
   if (isOpen(gameState)) {
-    joinGame(gameId);
+    joinGame({ id: gameId });
   }
 
   const game = new Chess();
@@ -45,7 +45,7 @@ export default function() {
   function onDrop(sourceSquare: string, targetSquare: string) {
     let nextState = validateMove(gameState!, userId, sourceSquare, targetSquare);
     if (nextState) {
-      performMove(gameId, sourceSquare, targetSquare);
+      performMove({ gameId, from: sourceSquare, to: targetSquare});
     } else {
     }
     return nextState != null;

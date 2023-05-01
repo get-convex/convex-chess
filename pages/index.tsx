@@ -44,7 +44,7 @@ export default function() {
         break;
     }
     event.preventDefault();
-    const id = await startNewGame(player1, player2);
+    const id = await startNewGame({player1, player2});
     router.push({ pathname: `/play/${id.id}`});
   }
 

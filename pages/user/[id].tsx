@@ -7,7 +7,7 @@ import { useRef, useState } from 'react';
 export default function() {
   const router = useRouter();
   const userId = new Id("users", router.query.id as string);
-  const user = useQuery("users:get", userId) || null;
+  const user = useQuery("users:get", { id: userId }) || null;
   const myUserId = useQuery("users:getMyUser") ?? null;
 
   const imageInput = useRef(null);
