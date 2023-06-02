@@ -21,7 +21,7 @@ export default defineSchema({
   users: defineTable({
     name: v.string(),
     tokenIdentifier: v.string(),
-    profilePic: v.union(v.string(), v.null()),
+    profilePic: v.optional(v.union(v.string(), v.null())),
   })
   .index("by_token", ["tokenIdentifier"])
   .searchIndex("search_name", { searchField: "name" }),
