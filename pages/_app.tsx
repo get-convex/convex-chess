@@ -1,12 +1,12 @@
+import { api } from "../convex/_generated/api";
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 
-import { ConvexReactClient } from 'convex/react'
+import { ConvexReactClient, useQuery } from 'convex/react'
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0'
 
 import { useAuth0, Auth0Provider } from '@auth0/auth0-react';
 import { useState } from 'react';
-import { useQuery } from '../convex/_generated/react';
 import Link from 'next/link';
 import { gameTitle } from '../common';
 import { Game } from '../convex/search';
@@ -44,14 +44,14 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   const [searchInput, setSearchInput] = useState("");
 
-  const userId = useQuery("users:getMyUser") || null;
+  const userId = useQuery(api.users.getMyUser) || null;
 
   const handleChange = (e: any) => {
     e.preventDefault();
     setSearchInput(e.target.value);
   };
 
-  const searchResults = useQuery("search", { query: searchInput }) || [];
+  const searchResults = useQuery(api.search.default, { query: searchInput }) || {users: [], games: []};
   return (
     <div>
       <div className="convexImage">
@@ -65,14 +65,19 @@ function MyApp({ Component, pageProps }: AppProps) {
           </div>
           <table>
             <tbody>
-              {searchResults.map((result) =>
-                <tr key={result._id.id}>
+              {searchResults.users.map((result) =>
+                <tr key={result._id}>
                   <td>
                     {
-                    result._id.tableName == "games" ?
-                      <Link href={`/play/${result._id.id}`}>{gameTitle(result as Game)}</Link> :
-                      <Link href={`/user/${result._id.id}`}>{(result as any).name}</Link>
+                      <Link href={`/user/${result._id}`}>{(result as any).name}</Link>
                     }
+                  </td>
+                </tr>
+              )}
+              {searchResults.games.map((result) =>
+                <tr key={result._id}>
+                  <td>
+                      <Link href={`/play/${result._id}`}>{gameTitle(result as Game)}</Link>
                   </td>
                 </tr>
               )}

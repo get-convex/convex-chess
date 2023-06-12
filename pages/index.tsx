@@ -1,6 +1,7 @@
+import { api } from "../convex/_generated/api";
 import { FormEvent } from 'react'
 
-import { useMutation, useQuery } from '../convex/_generated/react'
+import { useMutation, useQuery } from 'convex/react'
 import { isOpen, hasPlayer } from "../convex/utils"
 import { gameTitle } from "../common"
 
@@ -12,9 +13,9 @@ export default function() {
 
   const { user } = useAuth0();
 
-  const ongoingGames = useQuery("games:ongoingGames") || [];
-  const userId = useQuery("users:getMyUser") ?? null;
-  const startNewGame = useMutation("games:newGame");
+  const ongoingGames = useQuery(api.games.ongoingGames) || [];
+  const userId = useQuery(api.users.getMyUser) ?? null;
+  const startNewGame = useMutation(api.games.newGame);
 
   async function newGame(event: FormEvent) {
     const value = (event.nativeEvent as any).submitter.defaultValue ?? "";
@@ -45,7 +46,7 @@ export default function() {
     }
     event.preventDefault();
     const id = await startNewGame({player1, player2});
-    router.push({ pathname: `/play/${id.id}`});
+    router.push({ pathname: `/play/${id}`});
   }
 
   async function join(event: FormEvent) {

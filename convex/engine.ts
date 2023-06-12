@@ -1,5 +1,6 @@
 "use node";
 
+import { api } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { internalAction } from "./_generated/server";
 const jsChessEngine = require('js-chess-engine')
@@ -11,7 +12,7 @@ export const maybeMakeComputerMove = internalAction(async (
   { id }: { id: Id<"games"> },
 ) => {
   const { runQuery, runMutation } = ctx;
-  const state = await runQuery('games:internalGetPgnForComputerMove', { id });
+  const state = await runQuery(api.games.internalGetPgnForComputerMove, { id });
   if (state === null) {
     return;
   }
@@ -37,7 +38,7 @@ export const maybeMakeComputerMove = internalAction(async (
   let moveTo = aiMove[moveFrom];
   console.log(`move at level ${level}: ${moveFrom}->${moveTo}`);
   await runMutation(
-    'games:internalMakeComputerMove',
+    api.games.internalMakeComputerMove,
     {
       id,
       moveFrom: moveFrom.toLowerCase(),

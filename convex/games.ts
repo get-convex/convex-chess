@@ -1,3 +1,4 @@
+import { api } from "./_generated/api";
 import { query, mutation, DatabaseWriter, DatabaseReader, internalMutation } from './_generated/server'
 import { Id, Doc } from "./_generated/dataModel";
 
@@ -5,6 +6,7 @@ import { getCurrentPlayer, validateMove, PlayerId, getNextPlayer } from "./utils
 
 import { Chess, Move } from "chess.js";
 import { getOrCreateUser } from './users';
+import { Scheduler } from "convex/server";
 
 async function playerName(
   db: DatabaseReader,
@@ -15,7 +17,7 @@ async function playerName(
   } else if (typeof playerId == "string") {
     return playerId;
   } else {
-    const user = await db.get(playerId);
+    const user = await db.get(playerId as Id<"users">);
     if (user === null) {
       throw new Error(`Missing player id ${playerId}`);
     }
@@ -81,14 +83,14 @@ export const newGame = mutation(async (
   }
 
   const game = new Chess();
-  const id = await db.insert('games', {
+  let id: Id<"games"> = await db.insert('games', {
     pgn: game.pgn(),
     player1: player1Id,
     player2: player2Id,
     finished: false,
   });
 
-  scheduler.runAfter(1000, "engine:maybeMakeComputerMove", { id });
+  scheduler.runAfter(1000, api.engine.maybeMakeComputerMove, { id });
 
   return id;
 })
@@ -106,11 +108,11 @@ export const joinGame = mutation(async (
     throw new Error(`Invalid game ${id}`);
   }
 
-  if (!state.player1 && !user.equals(state.player2)) {
+  if (!state.player1 && user !== state.player2) {
     await db.patch(id, {
       player1: user,
     });
-  } else if (!state.player2 && !user.equals(state.player1)) {
+  } else if (!state.player2 && user !== state.player1) {
     await db.patch(id, {
       player2: user,
     });
@@ -120,7 +122,7 @@ export const joinGame = mutation(async (
 async function _performMove(
   db: DatabaseWriter,
   player: PlayerId,
-  scheduler: any,
+  scheduler: Scheduler,
   state: Doc<"games">,
   from: string,
   to: string,
@@ -137,7 +139,7 @@ async function _performMove(
     finished: nextState.isGameOver(),
   });
 
-  scheduler.runAfter(1000, "engine:maybeMakeComputerMove", { id: state._id });
+  scheduler.runAfter(1000, api.engine.maybeMakeComputerMove, { id: state._id });
 }
 
 export const move = mutation(async (
@@ -182,8 +184,9 @@ export const internalGetPgnForComputerMove = query(async (
   }
 
   const opponent = getNextPlayer(state);
+
   let strategy = 'default';
-  if (opponent instanceof Id) {
+  if (opponent !== "Computer") {
     const opponentPlayer = await db.get(opponent as Id<'users'>);
     const name = opponentPlayer!.name.toLowerCase();
     if (name.includes('nipunn')) {
