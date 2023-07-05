@@ -8,7 +8,7 @@ export function playerEquals(player1: PlayerId, player2: PlayerId) {
     // null is not equal to null.
     return false;
   }
-  return (typeof player1 == "string") ? player1 == player2 : player1.equals(player2);
+  return (typeof player1 == "string") ? player1 == player2 : player1 === player2;
 }
 
 export function isOpen(state: Doc<"games">) : boolean {

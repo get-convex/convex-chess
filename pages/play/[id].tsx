@@ -1,22 +1,23 @@
+import { api } from "../../convex/_generated/api";
 import { useRouter } from 'next/router'
 import { Chess, Move } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
-import { useMutation, useQuery } from '../../convex/_generated/react'
+import { useMutation, useQuery } from 'convex/react';
 import { Id } from "../../convex/_generated/dataModel";
 import { validateMove, isOpen, playerEquals } from "../../convex/utils"
 import { gameTitle } from "../../common"
 
 export default function() {
   const router = useRouter();
-  const gameId = new Id("games", router.query.id as string);
+  const gameId = router.query.id as Id<"games">;
 
-  const gameState = useQuery('games:get', { id: gameId })
-  const userId = useQuery("users:getMyUser") ?? null;
+  const gameState = useQuery(api.games.get, { id: gameId })
+  const userId = useQuery(api.users.getMyUser) ?? null;
 
-  const performMove = useMutation('games:move').withOptimisticUpdate(
+  const performMove = useMutation(api.games.move).withOptimisticUpdate(
     (localStore, { gameId, from, to }) => {
-      const state = localStore.getQuery("games:get", { id: gameId });
+      const state = localStore.getQuery(api.games.get, { id: gameId });
       if (state) {
         const game = new Chess();
         game.loadPgn(state.pgn);
@@ -24,11 +25,11 @@ export default function() {
         const newState = { ...state };
         newState.pgn = game.pgn();
         console.log("nextState", game.history(), gameId);
-        localStore.setQuery("games:get", { id: gameId }, newState);
+        localStore.setQuery(api.games.get, { id: gameId }, newState);
       }
     }
   );
-  const joinGame = useMutation("games:joinGame");
+  const joinGame = useMutation(api.games.joinGame);
   if (!gameState) {
     return (
       <></>

@@ -7,6 +7,11 @@ export interface Game extends Doc<"games"> {
     player2Name: string,
 };
 
+type SearchResult = { 
+    users: Doc<"users">[],
+    games: Game[],
+}
+
 export default query(async ({ db }, { query }: { query: string; }) => {
     const users = await db.query("users").withSearchIndex("search_name", q =>
         q.search("name", query)
@@ -14,10 +19,9 @@ export default query(async ({ db }, { query }: { query: string; }) => {
     const games = await db.query("games").withSearchIndex("search_pgn",  q =>
         q.search("pgn", query)
     ).collect();
-    let results : (Game|Doc<"users">)[] = [];
-    results = results.concat(users);
+    let normalizedGames = [];
     for (const game of games) {
-        results.push(await denormalizePlayerNames(db, game));
+        normalizedGames.push(await denormalizePlayerNames(db, game));
     }
-    return results;
+    return { users, games: normalizedGames }
 })
