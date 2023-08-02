@@ -156,7 +156,7 @@ async function _performMove(
     finished: nextState.isGameOver(),
   })
 
-  scheduler.runAfter(1000, internal.engine.maybeMakeComputerMove, {
+  await scheduler.runAfter(1000, internal.engine.maybeMakeComputerMove, {
     id: state._id,
   })
 }
