@@ -137,7 +137,7 @@ async function _performMove(
     finished: nextState.isGameOver(),
   });
 
-  scheduler.runAfter(1000, "engine:maybeMakeComputerMove", { id: state._id });
+  await scheduler.runAfter(1000, "engine:maybeMakeComputerMove", { id: state._id });
 }
 
 export const move = mutation(async (
