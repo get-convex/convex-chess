@@ -106,20 +106,20 @@ export default function() {
             }
             </tbody>
           </table>
-          <table>
-            <tbody>
-              <tr>
-                {moveIndex !== undefined ?
-                <td><strong>{Math.floor(moveIndex / 2) + 1}{moveIndex % 2 ? 'b' : 'a'}. {move}</strong></td>
-                : null }
-              </tr>
-              <tr>
-                <td className="analysis">
-                  {analysis}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          {moveIndex !== undefined &&
+            <table>
+              <tbody>
+                <tr>
+                  <td><strong>{Math.floor(moveIndex / 2) + 1}{moveIndex % 2 ? 'b' : 'a'}. {move}</strong></td>
+                </tr>
+                <tr>
+                  <td className="analysis">
+                    {analysis}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          }
         </div>
       </div>
     </main>

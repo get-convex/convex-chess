@@ -77,7 +77,7 @@ function MyApp({ Component, pageProps }: AppProps) {
               {searchResults.games.map((result) =>
                 <tr key={result._id}>
                   <td>
-                      <Link href={`/play/${result._id}`}>{gameTitle(result as Game)}</Link>
+                      <Link href={`/play/${result._id}?moveIndex=${result.moveIndex ?? ""}`}>{gameTitle(result)}</Link>
                   </td>
                 </tr>
               )}

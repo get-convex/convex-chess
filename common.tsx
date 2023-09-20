@@ -16,10 +16,16 @@ function getProfileLink(className: string, name: string, id: string | Id<"users"
 export function gameTitle(state: Game) {
     const player1Span = getProfileLink("whitePlayer", state.player1Name, state.player1);
     const player2Span = getProfileLink("blackPlayer", state.player2Name, state.player2);
+    const context = state.resultContext;
     if (state.player1Name && state.player2Name) {
       return (
         <div>
-          {player1Span} vs {player2Span}
+          <div>{player1Span} vs {player2Span}</div>
+          {context && (
+            <div>
+              {context}
+            </div>
+          )}
         </div>
       )
     } else if (state.player1Name) {
