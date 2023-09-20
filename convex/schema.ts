@@ -10,6 +10,11 @@ export default defineSchema({
   })
     .index('finished', ['finished'])
     .searchIndex('search_pgn', { searchField: 'pgn' }),
+  analysis: defineTable({
+    game: v.id("games"),
+    moveIndex: v.number(),
+    analysis: v.string(),
+  }),
   users: defineTable({
     name: v.string(),
     tokenIdentifier: v.string(),
