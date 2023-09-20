@@ -148,6 +148,7 @@ async function _performMove(
   from: string,
   to: string
 ) {
+  const currentPGN = state.pgn;
   let nextState = validateMove(state, player, from, to);
   if (!nextState) {
     console.log(`invalid move ${from}-${to}`);
@@ -174,9 +175,12 @@ async function _performMove(
     finished: nextState.isGameOver(),
   });
 
+  const history = nextState.history();
   await scheduler.runAfter(0, internal.games.analyzeMove, {
-    id: state._id,
-    moveIndex: nextState.history().length - 1,
+    gameId: state._id,
+    moveIndex: history.length - 1,
+    previousPGN: currentPGN,
+    move: history[history.length - 1],
   });
 
   await scheduler.runAfter(1000, internal.engine.maybeMakeComputerMove, {
@@ -184,15 +188,40 @@ async function _performMove(
   });
 }
 
+const boardView = (chess: Chess): string => {
+  const rows = [];
+  for (const row of chess.board()) {
+    let rowView = '';
+    for (const square of row) {
+      if (square === null) {
+        rowView += '.';
+      } else {
+        let piece = square.type as string;
+        if (square.color === 'w') {
+          piece = piece.toUpperCase();
+        }
+        rowView += piece;
+      }
+    }
+    rows.push(rowView);
+  }
+  return rows.join('\n');
+};
+
 export const analyzeMove = internalAction({
-  args: { id: v.id('games'), moveIndex: v.number() },
-  handler: async (ctx, { id, moveIndex }) => {
-    const pgn = await ctx.runQuery(internal.games.getPGN, { id });
+  args: {
+    gameId: v.id('games'),
+    moveIndex: v.number(),
+    previousPGN: v.string(),
+    move: v.string(),
+  },
+  handler: async (ctx, { gameId, moveIndex, previousPGN, move }) => {
     const game = new Chess();
-    game.loadPgn(pgn);
-    console.log(`History: ${game.history()}`);
-    const move = game.history()[moveIndex];
-    const prompt = `Analyze the ${moveIndex} half move in this chess game. Please make the response consise: ${game.history()}.`;
+    game.loadPgn(previousPGN);
+    const boardState = boardView(game);
+    const _boardState = game.fen();
+    const oldPrompt = `Analyze just the move at index ${moveIndex} in this chess game. Only tell me about the effect of that move.: ${game.history()}.`;
+    const prompt = `You are a chess expert. I am playing a chess game. The board looks like this:\n${boardState}\n\nAnalyze the effect of playing the move ${move}. Please analyze concisely, with less than 20 words.`;
     const response = await chatCompletion({
       messages: [
         {
@@ -203,18 +232,38 @@ export const analyzeMove = internalAction({
     });
     const responseText = await response.content.readAll();
     console.log(`PROMPT '${prompt}' GOT RESPONSE '${responseText}'`);
+    await ctx.runMutation(internal.games.saveAnalysis, {
+      gameId: gameId,
+      moveIndex,
+      analysis: responseText,
+    });
   },
 });
 
-export const getPGN = internalQuery({
-  args: { id: v.id('games') },
-  handler: async (ctx, { id }) => {
-    let state = await ctx.db.get(id);
-    if (state == null) {
-      throw new Error(`Invalid game ${id}`);
+export const saveAnalysis = internalMutation({
+  args: {
+    gameId: v.id('games'),
+    moveIndex: v.number(),
+    analysis: v.string(),
+  },
+  handler: async (ctx, { gameId, moveIndex, analysis }) => {
+    const analysisDoc = await ctx.db
+      .query('analysis')
+      .withIndex('by_game_index', (q) =>
+        q.eq('game', gameId).eq('moveIndex', moveIndex)
+      )
+      .unique();
+    if (analysisDoc) {
+      await ctx.db.patch(analysisDoc._id, {
+        analysis,
+      });
+    } else {
+      await ctx.db.insert('analysis', {
+        game: gameId,
+        moveIndex,
+        analysis,
+      });
     }
-
-    return state.pgn;
   },
 });
 
