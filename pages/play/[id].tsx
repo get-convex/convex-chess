@@ -7,6 +7,7 @@ import { useMutation, useQuery } from 'convex/react';
 import { Id } from "../../convex/_generated/dataModel";
 import { validateMove, isOpen, playerEquals } from "../../convex/utils"
 import { gameTitle } from "../../common"
+import { useState } from "react";
 
 export default function() {
   const router = useRouter();
@@ -14,6 +15,8 @@ export default function() {
 
   const gameState = useQuery(api.games.get, { id: gameId })
   const userId = useQuery(api.users.getMyUser) ?? null;
+  const [selectedMove, setSelectedMove] = useState<undefined | number>(undefined);
+  const { analysis, moveIndex, move } = useQuery(api.games.getAnalysis, gameState ? { gameId: gameState._id, moveIndex: selectedMove } : 'skip') ?? {};
 
   const performMove = useMutation(api.games.move).withOptimisticUpdate(
     (localStore, { gameId, from, to }) => {
@@ -43,10 +46,18 @@ export default function() {
   const game = new Chess();
   game.loadPgn(gameState.pgn);
 
+  const clickWhiteMove = (i: number) => {
+    setSelectedMove(i * 2);
+  };
+  const clickBlackMove = (i: number) => {
+    setSelectedMove(i * 2 + 1);
+  };
+
   function onDrop(sourceSquare: string, targetSquare: string) {
     let nextState = validateMove(gameState!, userId, sourceSquare, targetSquare);
     if (nextState) {
       performMove({ gameId, from: sourceSquare, to: targetSquare});
+      setSelectedMove(undefined);
     } else {
     }
     return nextState != null;
@@ -82,11 +93,25 @@ export default function() {
               turns.map((turn, i) => (
                 <tr key={i}>
                   <td className="moveNumber">{turn.num}.</td>
-                  <td className="moveSquare">{turn.whiteMove}</td>
-                  <td className="moveSquare">{turn.blackMove}</td>
+                  <td className="moveSquare" onClick={() => clickWhiteMove(i)}>{turn.whiteMove}</td>
+                  <td className="moveSquare" onClick={() => clickBlackMove(i)}>{turn.blackMove}</td>
                 </tr>
               ))
             }
+            </tbody>
+          </table>
+          <table>
+            <tbody>
+              <tr>
+                {moveIndex !== undefined ?
+                <td><strong>{Math.floor(moveIndex / 2) + 1}{moveIndex % 2 ? 'b' : 'a'}. {move}</strong></td>
+                : null }
+              </tr>
+              <tr>
+                <td className="analysis">
+                  {analysis}
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

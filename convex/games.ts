@@ -230,13 +230,17 @@ export const analyzeMove = internalAction({
         },
       ],
     });
-    const responseText = await response.content.readAll();
+    let responseText = '';
+    for await (const chunk of response.content.read()) {
+      responseText += chunk;
+
+      await ctx.runMutation(internal.games.saveAnalysis, {
+        gameId: gameId,
+        moveIndex,
+        analysis: responseText,
+      });
+    }
     console.log(`PROMPT '${prompt}' GOT RESPONSE '${responseText}'`);
-    await ctx.runMutation(internal.games.saveAnalysis, {
-      gameId: gameId,
-      moveIndex,
-      analysis: responseText,
-    });
   },
 });
 
@@ -264,6 +268,47 @@ export const saveAnalysis = internalMutation({
         analysis,
       });
     }
+  },
+});
+
+export const getAnalysis = query({
+  args: { gameId: v.id('games'), moveIndex: v.optional(v.number()) },
+  handler: async (ctx, { gameId, moveIndex }) => {
+    const state = await ctx.db.get(gameId);
+    if (state === null) {
+      throw new Error("Invalid Game ID");
+    }
+
+    let analysis;
+    if (moveIndex) {
+      analysis = await ctx.db
+        .query('analysis')
+        .withIndex('by_game_index', (q) =>
+          q.eq('game', gameId).eq('moveIndex', moveIndex)
+        )
+        .unique();
+    } else {
+      analysis = await ctx.db
+        .query('analysis')
+        .withIndex('by_game_index', (q) => q.eq('game', gameId))
+        .order('desc')
+        .first();
+    }
+
+    if (analysis === null) {
+      return null;
+    }
+
+    const currentPGN = state.pgn;
+    const game = new Chess();
+    game.loadPgn(currentPGN);
+    const move = game.history()[analysis.moveIndex];
+
+    return {
+      analysis: analysis.analysis,
+      moveIndex: analysis.moveIndex,
+      move,
+    };
   },
 });
 
