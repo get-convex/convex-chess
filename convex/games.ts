@@ -151,6 +151,18 @@ async function _performMove(
     return
   }
 
+  if (nextState.isGameOver()) {
+    const currentPlayer = await playerName(db, getCurrentPlayer(state))
+    const nextPlayer = await playerName(db, getNextPlayer(state))
+
+    if (nextState.isCheckmate()) {
+      console.log(`Checkmate! ${currentPlayer} beat ${nextPlayer}`)
+    }
+    if (nextState.isDraw()) {
+      console.log(`Draw! ${currentPlayer} and ${nextPlayer} are evenly matched`)
+    }
+  }
+
   await db.patch(state._id, {
     pgn: nextState.pgn(),
     finished: nextState.isGameOver(),
