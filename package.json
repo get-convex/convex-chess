@@ -4,7 +4,7 @@
     "dev": "npm-run-all init dev:init --parallel dev:server dev:client",
     "build": "tsc && next build",
     "init": "convex init",
-    "dev:server": "convex dev",
+    "dev:server": "convex dev --tail-logs",
     "dev:client": "next dev",
     "dev:init": "convex dev --once",
     "start": "next start"
