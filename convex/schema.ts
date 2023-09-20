@@ -14,7 +14,9 @@ export default defineSchema({
     game: v.id("games"),
     moveIndex: v.number(),
     analysis: v.string(),
-  }).index('by_game_index', ['game', 'moveIndex']),
+  })
+    .index('by_game_index', ['game', 'moveIndex'])
+    .searchIndex('search_analysis', { searchField: 'analysis' }),
   users: defineTable({
     name: v.string(),
     tokenIdentifier: v.string(),

@@ -276,11 +276,11 @@ export const getAnalysis = query({
   handler: async (ctx, { gameId, moveIndex }) => {
     const state = await ctx.db.get(gameId);
     if (state === null) {
-      throw new Error("Invalid Game ID");
+      throw new Error('Invalid Game ID');
     }
 
     let analysis;
-    if (moveIndex) {
+    if (moveIndex !== undefined) {
       analysis = await ctx.db
         .query('analysis')
         .withIndex('by_game_index', (q) =>

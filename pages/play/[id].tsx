@@ -7,15 +7,21 @@ import { useMutation, useQuery } from 'convex/react';
 import { Id } from "../../convex/_generated/dataModel";
 import { validateMove, isOpen, playerEquals } from "../../convex/utils"
 import { gameTitle } from "../../common"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function() {
   const router = useRouter();
   const gameId = router.query.id as Id<"games">;
+  const moveIdx = router.query.moveIndex ? Number(router.query.moveIndex) : undefined;
 
-  const gameState = useQuery(api.games.get, { id: gameId })
+  const gameState = useQuery(api.games.get, { id: gameId });
   const userId = useQuery(api.users.getMyUser) ?? null;
-  const [selectedMove, setSelectedMove] = useState<undefined | number>(undefined);
+  const [selectedMove, setSelectedMove] = useState<undefined | number>(moveIdx);
+
+  useEffect(() => {
+    if (moveIdx !== undefined && moveIdx !== selectedMove) setSelectedMove(moveIdx);
+  }, [moveIdx]);
+
   const { analysis, moveIndex, move } = useQuery(api.games.getAnalysis, gameState ? { gameId: gameState._id, moveIndex: selectedMove } : 'skip') ?? {};
 
   const performMove = useMutation(api.games.move).withOptimisticUpdate(
