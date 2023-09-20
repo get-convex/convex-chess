@@ -5,7 +5,7 @@ import { query } from './_generated/server';
 export interface Game extends Doc<'games'> {
   player1Name: string;
   player2Name: string;
-  moveIndex: number;
+  moveIndex?: number;
   resultContext?: string;
 }
 
