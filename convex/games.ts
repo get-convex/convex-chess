@@ -17,7 +17,7 @@ import {
   getNextPlayer,
 } from './utils';
 
-import { Chess, Move } from 'chess.js';
+import { Chess, Move, Square } from 'chess.js';
 import { getOrCreateUser } from './users';
 import { Scheduler } from 'convex/server';
 import { v } from 'convex/values';
@@ -331,6 +331,45 @@ export const move = mutation(
     await _performMove(db, userId, scheduler, state, from, to);
   }
 );
+
+export const getValidMoves = query({
+  args: { 
+    gameId: v.id("games"),
+    from: v.string() 
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      return []
+    }
+  
+    // Check if we've already stored this identity before.
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_token', (q) =>
+        q.eq('tokenIdentifier', identity.tokenIdentifier)
+      )
+      .unique()
+  
+    if (user === null) {
+      return []
+    }
+
+    const state = await ctx.db.get(args.gameId);
+    if (state == null) {
+      throw new Error(`Invalid game ${args.gameId}`);
+    }
+
+    const game = new Chess()
+    game.loadPgn(state.pgn)
+    const currentPlayer = getCurrentPlayer(state);
+    if (currentPlayer !== user._id) {
+      return []
+    }
+    const moves = game.moves({ square: args.from as Square });
+    return moves;
+  }
+})
 
 export const internalGetPgnForComputerMove = query(
   async ({ db }, { id }: { id: Id<'games'> }) => {
