@@ -1,6 +1,6 @@
 import { api } from "../../convex/_generated/api";
 import { useRouter } from 'next/router'
-import { Chess, Move } from "chess.js";
+import { Chess, Move, Square } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
 import { useMutation, useQuery } from 'convex/react';
@@ -8,6 +8,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { validateMove, isOpen, playerEquals } from "../../convex/utils"
 import { gameTitle } from "../../common"
 import { useEffect, useState } from "react";
+import { CustomSquareStyles } from "react-chessboard/dist/chessboard/types";
 
 export default function() {
   const router = useRouter();
@@ -17,6 +18,9 @@ export default function() {
   const gameState = useQuery(api.games.get, { id: gameId });
   const userId = useQuery(api.users.getMyUser) ?? null;
   const [selectedMove, setSelectedMove] = useState<undefined | number>(moveIdx);
+  const [hoveredSquare, setHoveredSquare] = useState<undefined | string>();
+
+  const possibleMoves = useQuery(api.games.getValidMoves, hoveredSquare === undefined ? "skip" : { gameId , from: hoveredSquare })
 
   useEffect(() => {
     if (moveIdx !== undefined && moveIdx !== selectedMove) setSelectedMove(moveIdx);
@@ -83,13 +87,26 @@ export default function() {
   }
 
   const boardOrientation = playerEquals(userId, gameState.player2 as any) ? 'black' : 'white';
+  const customSquareStyles: CustomSquareStyles = {}
+  for (const square of possibleMoves ?? []) {
+    const s = square.slice(square.length - 2)
+    customSquareStyles[s as Square] = { backgroundColor : "green", borderRadius: "50%" };
+  }
 
   return (
     <main>
       <div>{gameTitle(gameState)}</div>
       <div className="game">
         <div className="board">
-          <Chessboard boardWidth={560} position={game.fen()} onPieceDrop={onDrop} boardOrientation={boardOrientation} />
+          <Chessboard 
+            onMouseOverSquare={(square) => setHoveredSquare(square)} 
+            onMouseOutSquare={() => setHoveredSquare(undefined)} 
+            boardWidth={560} 
+            position={game.fen()} 
+            onPieceDrop={onDrop} 
+            boardOrientation={boardOrientation} 
+            customSquareStyles={customSquareStyles}
+          />
         </div>
         <div className="moves">
           Moves
