@@ -20,7 +20,7 @@ import {
 import { Chess, Move } from 'chess.js';
 import { getOrCreateUser } from './users';
 import { Scheduler } from 'convex/server';
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import { chatCompletion } from './lib/openai';
 
 async function playerName(
@@ -151,9 +151,8 @@ async function _performMove(
   const currentPGN = state.pgn;
   let nextState = validateMove(state, player, from, to);
   if (!nextState) {
-    console.log(`invalid move ${from}-${to}`);
     // Invalid move.
-    return;
+    throw new ConvexError(`invalid move ${from}-${to}`);
   }
 
   if (nextState.isGameOver()) {

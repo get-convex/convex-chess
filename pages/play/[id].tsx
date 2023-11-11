@@ -19,6 +19,7 @@ export default function () {
   const gameState = useQuery(api.games.get, { id: gameId });
   const userId = useQuery(api.users.getMyUser) ?? null;
   const [selectedMove, setSelectedMove] = useState<undefined | number>(moveIdx);
+  const [mainStyle, setMainStyle] = useState<{ backgroundColor?: string }>({});
 
   useEffect(() => {
     if (moveIdx !== undefined && moveIdx !== selectedMove)
@@ -46,6 +47,8 @@ export default function () {
     }
   );
   const joinGame = useMutation(api.games.joinGame);
+  const tryPerformMove = useMutation(api.games.move);
+
   if (!gameState) {
     return <></>;
   }
@@ -64,7 +67,7 @@ export default function () {
     setSelectedMove(i * 2 + 1);
   };
 
-  function onDrop(sourceSquare: string, targetSquare: string) {
+  async function onDrop(sourceSquare: string, targetSquare: string) {
     let nextState = validateMove(
       gameState!,
       userId,
@@ -72,9 +75,16 @@ export default function () {
       targetSquare
     );
     if (nextState) {
-      performMove({ gameId, from: sourceSquare, to: targetSquare });
+      await performMove({ gameId, from: sourceSquare, to: targetSquare });
       setSelectedMove(undefined);
     } else {
+      setMainStyle({ backgroundColor: 'red' });
+      setTimeout(() => setMainStyle({}), 50);
+      try {
+        await tryPerformMove({ gameId, from: sourceSquare, to: targetSquare });
+      } catch (error) {
+        console.log(error);
+      }
     }
     return nextState != null;
   }
@@ -97,13 +107,14 @@ export default function () {
     : 'white';
 
   return (
-    <main>
+    <main style={mainStyle}>
       <div>{gameTitle(gameState)}</div>
       <div className="game">
         <div className="board">
           <Chessboard
             boardWidth={560}
             position={game.fen()}
+            // @ts-ignore
             onPieceDrop={onDrop}
             boardOrientation={boardOrientation}
           />
