@@ -432,7 +432,7 @@ export class ChatCompletionContent {
         lastFragment += data;
         const parts = lastFragment.split("\n\n")
         // Yield all except for the last part
-        for (let i =0; i < parts.length - 1; i += 1) {
+        for (let i = 0; i < parts.length - 1; i += 1) {
           yield parts[i]
         }
         // Save the last part as the new last fragment
