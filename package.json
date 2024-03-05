@@ -7,7 +7,8 @@
     "dev:server": "convex dev --tail-logs",
     "dev:client": "next dev",
     "dev:init": "convex dev --once",
-    "start": "next start"
+    "start": "next start",
+    "test": "node checkLocalBackend.js && just convex deploy && just convex env set IS_TEST true && jest"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.0.1",

@@ -30,6 +30,7 @@ function setAuth(client: ConvexReactClient, identity: Omit<UserIdentity, "tokenI
 describe("games", () => {
   let client: ConvexReactClient;
   let identityFactory: IdentityFactory
+
   beforeEach(() => {
     // @ts-ignore
     client = new ConvexReactClient("http://127.0.0.1:8000", { webSocketConstructor: WebSocket});
