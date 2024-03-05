@@ -4,8 +4,9 @@ import {
   mutation,
   query,
 } from './_generated/server'
+import { Auth } from 'convex/server'
 
-export const getOrCreateUser = async (db: DatabaseWriter, auth: any) => {
+export const getOrCreateUser = async (db: DatabaseWriter, auth: Auth) => {
   const identity = await auth.getUserIdentity()
   if (!identity) {
     return null
@@ -28,7 +29,7 @@ export const getOrCreateUser = async (db: DatabaseWriter, auth: any) => {
   }
   // If it's a new identity, create a new `User`.
   return db.insert('users', {
-    name: identity.name,
+    name: identity.name ?? "",
     tokenIdentifier: identity.tokenIdentifier,
     profilePic: null,
   })

@@ -19,6 +19,7 @@ import type * as games from "../games.js";
 import type * as lib_openai from "../lib/openai.js";
 import type * as search from "../search.js";
 import type * as testing_clearAll from "../testing/clearAll.js";
+import type * as testing_setup from "../testing/setup.js";
 import type * as testing_wrappers from "../testing/wrappers.js";
 import type * as users from "../users.js";
 import type * as utils from "../utils.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   "lib/openai": typeof lib_openai;
   search: typeof search;
   "testing/clearAll": typeof testing_clearAll;
+  "testing/setup": typeof testing_setup;
   "testing/wrappers": typeof testing_wrappers;
   users: typeof users;
   utils: typeof utils;
