@@ -1,17 +1,17 @@
-import { api } from '../../convex/_generated/api';
-import { useRouter } from 'next/router';
-import { Chess, Move } from 'chess.js';
-import { Chessboard } from 'react-chessboard';
+import { api } from "../../convex/_generated/api";
+import { useRouter } from "next/router";
+import { Chess, Move } from "chess.js";
+import { Chessboard } from "react-chessboard";
 
-import { useMutation, useQuery } from 'convex/react';
-import { Id } from '../../convex/_generated/dataModel';
-import { validateMove, isOpen, playerEquals } from '../../convex/utils';
-import { gameTitle } from '../../common';
-import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from "convex/react";
+import { Id } from "../../convex/_generated/dataModel";
+import { validateMove, isOpen, playerEquals } from "../../convex/utils";
+import { gameTitle } from "../../common";
+import { useEffect, useState } from "react";
 
 export default function () {
   const router = useRouter();
-  const gameId = router.query.id as Id<'games'>;
+  const gameId = router.query.id as Id<"games">;
   const moveIdx = router.query.moveIndex
     ? Number(router.query.moveIndex)
     : undefined;
@@ -29,7 +29,7 @@ export default function () {
   const { analysis, moveIndex, move } =
     useQuery(
       api.games.getAnalysis,
-      gameState ? { gameId: gameState._id, moveIndex: selectedMove } : 'skip'
+      gameState ? { gameId: gameState._id, moveIndex: selectedMove } : "skip"
     ) ?? {};
 
   const performMove = useMutation(api.games.move).withOptimisticUpdate(
@@ -41,7 +41,7 @@ export default function () {
         game.move({ from, to });
         const newState = { ...state };
         newState.pgn = game.pgn();
-        console.log('nextState', game.history(), gameId);
+        console.log("nextState", game.history(), gameId);
         localStore.setQuery(api.games.get, { id: gameId }, newState);
       }
     }
@@ -78,7 +78,7 @@ export default function () {
       await performMove({ gameId, from: sourceSquare, to: targetSquare });
       setSelectedMove(undefined);
     } else {
-      setMainStyle({ backgroundColor: 'red' });
+      setMainStyle({ backgroundColor: "red" });
       setTimeout(() => setMainStyle({}), 50);
       try {
         await tryPerformMove({ gameId, from: sourceSquare, to: targetSquare });
@@ -95,16 +95,16 @@ export default function () {
     blackMove: string;
   };
   let turns: Turn[] = [];
-  let history = game.history().length > 0 ? game.history() : [''];
+  let history = game.history().length > 0 ? game.history() : [""];
   while (history.length > 0) {
     const whiteMove = history.shift() as string;
-    const blackMove = (history.shift() as string) ?? '';
+    const blackMove = (history.shift() as string) ?? "";
     turns.push({ num: turns.length + 1, whiteMove, blackMove });
   }
 
   const boardOrientation = playerEquals(userId, gameState.player2 as any)
-    ? 'black'
-    : 'white';
+    ? "black"
+    : "white";
 
   return (
     <main style={mainStyle}>
@@ -143,7 +143,7 @@ export default function () {
                   <td>
                     <strong>
                       {Math.floor(moveIndex / 2) + 1}
-                      {moveIndex % 2 ? 'b' : 'a'}. {move}
+                      {moveIndex % 2 ? "b" : "a"}. {move}
                     </strong>
                   </td>
                 </tr>

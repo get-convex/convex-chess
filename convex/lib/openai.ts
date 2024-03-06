@@ -1,25 +1,29 @@
 // That's right! No imports and no dependencies 🤯
 
 export async function chatCompletion(
-  body: Omit<CreateChatCompletionRequest, 'model'> & {
-    model?: CreateChatCompletionRequest['model'];
-  },
+  body: Omit<CreateChatCompletionRequest, "model"> & {
+    model?: CreateChatCompletionRequest["model"];
+  }
 ) {
   checkForAPIKey();
 
-  body.model = body.model ?? 'gpt-3.5-turbo-16k';
+  body.model = body.model ?? "gpt-3.5-turbo-16k";
   body.stream = true;
-  const stopWords = body.stop ? (typeof body.stop === 'string' ? [body.stop] : body.stop) : [];
+  const stopWords = body.stop
+    ? typeof body.stop === "string"
+      ? [body.stop]
+      : body.stop
+    : [];
   const {
     result: resultStream,
     retries,
     ms,
   } = await retryWithBackoff(async () => {
-    const result = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const result = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + process.env.OPENAI_API_KEY,
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + process.env.OPENAI_API_KEY,
       },
 
       body: JSON.stringify(body),
@@ -28,7 +32,9 @@ export async function chatCompletion(
       throw {
         retry: result.status === 429 || result.status >= 500,
         error: new Error(
-          `Chat completion failed with code ${result.status}: ${await result.text()}`,
+          `Chat completion failed with code ${
+            result.status
+          }: ${await result.text()}`
         ),
       };
     }
@@ -48,29 +54,31 @@ export async function fetchEmbeddingBatch(texts: string[]) {
     retries,
     ms,
   } = await retryWithBackoff(async () => {
-    const result = await fetch('https://api.openai.com/v1/embeddings', {
-      method: 'POST',
+    const result = await fetch("https://api.openai.com/v1/embeddings", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + process.env.OPENAI_API_KEY,
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + process.env.OPENAI_API_KEY,
       },
 
       body: JSON.stringify({
-        model: 'text-embedding-ada-002',
-        input: texts.map((text) => text.replace(/\n/g, ' ')),
+        model: "text-embedding-ada-002",
+        input: texts.map((text) => text.replace(/\n/g, " ")),
       }),
     });
     if (!result.ok) {
       throw {
         retry: result.status === 429 || result.status >= 500,
-        error: new Error(`Embedding failed with code ${result.status}: ${await result.text()}`),
+        error: new Error(
+          `Embedding failed with code ${result.status}: ${await result.text()}`
+        ),
       };
     }
     return (await result.json()) as CreateEmbeddingResponse;
   });
   if (json.data.length !== texts.length) {
     console.error(json);
-    throw new Error('Unexpected number of embeddings');
+    throw new Error("Unexpected number of embeddings");
   }
   const allembeddings = json.data;
   allembeddings.sort((a, b) => b.index - a.index);
@@ -90,11 +98,11 @@ export async function fetchEmbedding(text: string) {
 export async function fetchModeration(content: string) {
   checkForAPIKey();
   const { result: flagged } = await retryWithBackoff(async () => {
-    const result = await fetch('https://api.openai.com/v1/moderations', {
-      method: 'POST',
+    const result = await fetch("https://api.openai.com/v1/moderations", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + process.env.OPENAI_API_KEY,
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + process.env.OPENAI_API_KEY,
       },
 
       body: JSON.stringify({
@@ -104,7 +112,9 @@ export async function fetchModeration(content: string) {
     if (!result.ok) {
       throw {
         retry: result.status === 429 || result.status >= 500,
-        error: new Error(`Embedding failed with code ${result.status}: ${await result.text()}`),
+        error: new Error(
+          `Embedding failed with code ${result.status}: ${await result.text()}`
+        ),
       };
     }
     return (await result.json()) as { results: { flagged: boolean }[] };
@@ -115,9 +125,9 @@ export async function fetchModeration(content: string) {
 const checkForAPIKey = () => {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error(
-      'Missing OPENAI_API_KEY in environment variables.\n' +
-        'Set it in the project settings in the Convex dashboard:\n' +
-        '    npx convex dashboard\n or https://dashboard.convex.dev',
+      "Missing OPENAI_API_KEY in environment variables.\n" +
+        "Set it in the project settings in the Convex dashboard:\n" +
+        "    npx convex dashboard\n or https://dashboard.convex.dev"
     );
   }
 };
@@ -128,7 +138,7 @@ const RETRY_JITTER = 100; // In ms
 type RetryError = { retry: boolean; error: any };
 
 export async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
+  fn: () => Promise<T>
 ): Promise<{ retries: number; result: T; ms: number }> {
   let i = 0;
   for (; i <= RETRY_BACKOFF.length; i++) {
@@ -142,11 +152,13 @@ export async function retryWithBackoff<T>(
       if (i < RETRY_BACKOFF.length) {
         if (retryError.retry) {
           console.log(
-            `Attempt ${i + 1} failed, waiting ${RETRY_BACKOFF[i]}ms to retry...`,
-            Date.now(),
+            `Attempt ${i + 1} failed, waiting ${
+              RETRY_BACKOFF[i]
+            }ms to retry...`,
+            Date.now()
           );
           await new Promise((resolve) =>
-            setTimeout(resolve, RETRY_BACKOFF[i] + RETRY_JITTER * Math.random()),
+            setTimeout(resolve, RETRY_BACKOFF[i] + RETRY_JITTER * Math.random())
           );
           continue;
         }
@@ -155,7 +167,7 @@ export async function retryWithBackoff<T>(
       else throw e;
     }
   }
-  throw new Error('Unreachable');
+  throw new Error("Unreachable");
 }
 
 // Lifted from openai's package
@@ -170,7 +182,7 @@ export interface LLMMessage {
    * The role of the messages author. One of `system`, `user`, `assistant`, or
    * `function`.
    */
-  role: 'system' | 'user' | 'assistant' | 'function';
+  role: "system" | "user" | "assistant" | "function";
 
   /**
    * The name of the author of this message. `name` is required if role is
@@ -217,14 +229,14 @@ export interface CreateChatCompletionRequest {
    * @memberof CreateChatCompletionRequest
    */
   model:
-    | 'gpt-4'
-    | 'gpt-4-0613'
-    | 'gpt-4-32k'
-    | 'gpt-4-32k-0613'
-    | 'gpt-3.5-turbo'
-    | 'gpt-3.5-turbo-0613'
-    | 'gpt-3.5-turbo-16k' // <- our default
-    | 'gpt-3.5-turbo-16k-0613';
+    | "gpt-4"
+    | "gpt-4-0613"
+    | "gpt-4-32k"
+    | "gpt-4-32k-0613"
+    | "gpt-3.5-turbo"
+    | "gpt-3.5-turbo-0613"
+    | "gpt-3.5-turbo-16k" // <- our default
+    | "gpt-3.5-turbo-16k-0613";
   /**
    * The messages to generate chat completions for, in the chat format:
    * https://platform.openai.com/docs/guides/chat/introduction
@@ -340,7 +352,7 @@ export interface CreateChatCompletionRequest {
    * - "none" is the default when no functions are present.
    * - "auto" is the default if functions are present.
    */
-  function_call?: 'none' | 'auto' | { name: string };
+  function_call?: "none" | "auto" | { name: string };
 }
 
 // Checks whether a suffix of s1 is a prefix of s2. For example,
@@ -368,9 +380,9 @@ export class ChatCompletionContent {
 
   async *readInner() {
     for await (const data of this.splitStream(this.body)) {
-      if (data.startsWith('data: ')) {
+      if (data.startsWith("data: ")) {
         try {
-          const json = JSON.parse(data.substring('data: '.length)) as {
+          const json = JSON.parse(data.substring("data: ".length)) as {
             choices: { delta: { content?: string } }[];
           };
           if (json.choices[0].delta.content) {
@@ -386,7 +398,7 @@ export class ChatCompletionContent {
   // stop words in OpenAI api don't always work.
   // So we have to truncate on our side.
   async *read() {
-    let lastFragment = '';
+    let lastFragment = "";
     for await (const data of this.readInner()) {
       lastFragment += data;
       let hasOverlap = false;
@@ -402,13 +414,13 @@ export class ChatCompletionContent {
       }
       if (hasOverlap) continue;
       yield lastFragment;
-      lastFragment = '';
+      lastFragment = "";
     }
     yield lastFragment;
   }
 
   async readAll() {
-    let allContent = '';
+    let allContent = "";
     for await (const chunk of this.read()) {
       allContent += chunk;
     }
@@ -417,26 +429,26 @@ export class ChatCompletionContent {
 
   async *splitStream(stream: ReadableStream<Uint8Array>) {
     const reader = stream.getReader();
-    let lastFragment = '';
+    let lastFragment = "";
     try {
       while (true) {
         const { value, done } = await reader.read();
         if (done) {
           // Flush the last fragment now that we're done
           if (lastFragment !== "") {
-            yield lastFragment
+            yield lastFragment;
           }
-          break
+          break;
         }
         const data = new TextDecoder().decode(value);
         lastFragment += data;
-        const parts = lastFragment.split("\n\n")
+        const parts = lastFragment.split("\n\n");
         // Yield all except for the last part
         for (let i = 0; i < parts.length - 1; i += 1) {
-          yield parts[i]
+          yield parts[i];
         }
         // Save the last part as the new last fragment
-        lastFragment = parts[parts.length - 1]
+        lastFragment = parts[parts.length - 1];
       }
     } finally {
       reader.releaseLock();

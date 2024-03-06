@@ -1,8 +1,8 @@
-import { denormalizePlayerNames } from './games';
-import { Doc } from './_generated/dataModel';
-import { query } from './_generated/server';
+import { denormalizePlayerNames } from "./games";
+import { Doc } from "./_generated/dataModel";
+import { query } from "./_generated/server";
 
-export interface Game extends Doc<'games'> {
+export interface Game extends Doc<"games"> {
   player1Name: string;
   player2Name: string;
   moveIndex?: number;
@@ -10,22 +10,22 @@ export interface Game extends Doc<'games'> {
 }
 
 type SearchResult = {
-  users: Doc<'users'>[];
+  users: Doc<"users">[];
   games: Game[];
 };
 
 export default query(async ({ db }, { query }: { query: string }) => {
   const users = await db
-    .query('users')
-    .withSearchIndex('search_name', (q) => q.search('name', query))
+    .query("users")
+    .withSearchIndex("search_name", (q) => q.search("name", query))
     .collect();
   const games = await db
-    .query('games')
-    .withSearchIndex('search_pgn', (q) => q.search('pgn', query))
+    .query("games")
+    .withSearchIndex("search_pgn", (q) => q.search("pgn", query))
     .take(5);
   const analyses = await db
-    .query('analysis')
-    .withSearchIndex('search_analysis', (q) => q.search('analysis', query))
+    .query("analysis")
+    .withSearchIndex("search_analysis", (q) => q.search("analysis", query))
     .take(5);
   let denormalizedGames = [];
   for (const game of games) {
