@@ -2,14 +2,13 @@ import { api } from "../convex/_generated/api";
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
 
-import { ConvexReactClient, useQuery } from 'convex/react'
+import { ConvexReactClient, useConvexAuth, useQuery } from 'convex/react'
 import { ConvexProviderWithAuth0 } from 'convex/react-auth0'
 
 import { useAuth0, Auth0Provider } from '@auth0/auth0-react';
 import { useState } from 'react';
 import Link from 'next/link';
 import { gameTitle } from '../common';
-import { Game } from '../convex/search';
 
 const address = process.env.NEXT_PUBLIC_CONVEX_URL;
 if (!address) {
@@ -41,6 +40,7 @@ function App(props: AppProps) {
 
 function MyApp({ Component, pageProps }: AppProps) {
   const { user, loginWithRedirect, logout } = useAuth0();
+  const { isLoading, isAuthenticated } = useConvexAuth();
 
   const [searchInput, setSearchInput] = useState("");
 
@@ -87,7 +87,8 @@ function MyApp({ Component, pageProps }: AppProps) {
       <h1>Convex Chess</h1>
       <div className="badge">
           {
-          user ?
+          isLoading ? <div>Loading...</div> :
+          (isAuthenticated && user) ?
             <div>
               <Link className="profileLink" href={`/user/${userId}`}>{ user.name }</Link>
               <button className="btn btn-secondary" onClick={() => logout()}>Logout</button>

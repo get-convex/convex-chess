@@ -6,12 +6,12 @@ import { isOpen, hasPlayer } from "../convex/utils"
 import { gameTitle } from "../common"
 
 import { useRouter } from 'next/router'
-import { useAuth0 } from '@auth0/auth0-react';
+import { useConvexAuth } from "convex/react";
 
 export default function() {
   const router = useRouter();
 
-  const { user } = useAuth0();
+  const { isAuthenticated } = useConvexAuth();
 
   const ongoingGames = useQuery(api.games.ongoingGames) || [];
   const userId = useQuery(api.users.getMyUser) ?? null;
@@ -65,17 +65,13 @@ export default function() {
             type="submit"
             value="Play vs another Player"
             className="ms-2 btn btn-primary"
-            // We use user instead of userId here so this button doesn't toggle
-            // between enabled and disabled.
-            disabled={!user}
+            disabled={!isAuthenticated}
           />
           <input
             type="submit"
             value="Play vs Computer"
             className="ms-2 btn btn-primary"
-            // We use user instead of userId here so this button doesn't toggle
-            // between enabled and disabled.
-            disabled={!user}
+            disabled={!isAuthenticated}
           />
           <input
             type="submit"
@@ -100,9 +96,7 @@ export default function() {
                       type="submit"
                       value={hasPlayer(game, userId) ? "Rejoin" : isOpen(game) ? "Join" : "Watch"}
                       className="ms-2 btn btn-primary"
-                      // We use user instead of userId here we can join immediately
-                      // after logging in.
-                      disabled={isOpen(game) && !user}
+                      disabled={isOpen(game) && !isAuthenticated}
                     />
                   </form>
                 </td>
