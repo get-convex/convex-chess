@@ -1,5 +1,4 @@
 const http = require('http');
-const chalk = require('chalk');
 const readline = require('readline');
 const url = require('url');
 const { spawnSync } = require('child_process');
@@ -36,9 +35,7 @@ function onFailure() {
   });
 
   rl.question(
-    chalk.yellow(
-      "Looks like you don't have local backend running, start it now? [Y/n]: "
-    ),
+      "Looks like you don't have local backend running, start it now? [Y/n]: ",
     (answer) => {
       rl.close();
       if (
@@ -47,21 +44,15 @@ function onFailure() {
         answer === ''
       ) {
         console.error(
-          chalk.green(
             'Starting just run-local-backend now via `just run-local-backend`, ' +
               'repeat your original command in a new terminal'
-          )
         );
         spawnSync('just run-local-backend', { shell: true, stdio: 'inherit' });
         console.log(chalk.green('Quiting local backend, all is good!'));
         process.exit(1);
       } else {
         console.error(
-          chalk.yellow(
-            `Make sure to run ${chalk.white.bold(
-              'just run-local-backend'
-            )} in another terminal!`
-          )
+            "Make sure to run 'just run-local-backend' in another terminal!"
         );
       }
     }

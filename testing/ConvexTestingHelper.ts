@@ -6,6 +6,7 @@ import {
   UserIdentity,
 } from 'convex/server';
 import fs from 'fs';
+import path from "path"
 
 /**
  * This is a helper for testing Convex functions against a locally running backend.
@@ -33,7 +34,7 @@ export class ConvexTestingHelper {
       options.backendUrl ?? 'http://127.0.0.1:8000'
     );
     this._adminKey =
-      options.adminKey ?? fs.readFileSync('./admin_key.txt', 'utf-8');
+      options.adminKey ?? fs.readFileSync(path.resolve(__dirname, 'admin_key.txt'), 'utf-8');
   }
 
   newIdentity(
