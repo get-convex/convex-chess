@@ -1,22 +1,22 @@
-import { ConvexClient } from 'convex/browser';
+import { ConvexClient } from "convex/browser";
 import {
   FunctionArgs,
   FunctionReference,
   FunctionReturnType,
   UserIdentity,
-} from 'convex/server';
-import fs from 'fs';
-import path from "path"
+} from "convex/server";
+import fs from "fs";
+import path from "path";
 
 /**
  * This is a helper for testing Convex functions against a locally running backend.
- * 
+ *
  * An example of calling a function:
  * ```
  * const t = new ConvexTestingHelper();
  * const result = await t.query(api.foo.bar, { arg1: "baz" })
  * ```
- * 
+ *
  * An example of calling a function with auth:
  * ```
  * const t = new ConvexTestingHelper();
@@ -31,18 +31,19 @@ export class ConvexTestingHelper {
 
   constructor(options: { adminKey?: string; backendUrl?: string } = {}) {
     this.client = new ConvexClient(
-      options.backendUrl ?? 'http://127.0.0.1:8000'
+      options.backendUrl ?? "http://127.0.0.1:8000"
     );
     this._adminKey =
-      options.adminKey ?? fs.readFileSync(path.resolve(__dirname, 'admin_key.txt'), 'utf-8');
+      options.adminKey ??
+      fs.readFileSync(path.resolve(__dirname, "admin_key.txt"), "utf-8");
   }
 
   newIdentity(
-    args: Partial<Omit<UserIdentity, 'tokenIdentifier'>>
-  ): Omit<UserIdentity, 'tokenIdentifier'> {
+    args: Partial<Omit<UserIdentity, "tokenIdentifier">>
+  ): Omit<UserIdentity, "tokenIdentifier"> {
     const subject = `test subject ${this._nextSubjectId}`;
     this._nextSubjectId += 1;
-    const issuer = 'test issuer';
+    const issuer = "test issuer";
     return {
       ...args,
       subject,
@@ -51,8 +52,8 @@ export class ConvexTestingHelper {
   }
 
   withIdentity(
-    identity: Omit<UserIdentity, 'tokenIdentifier'>
-  ): Pick<ConvexClient, 'mutation' | 'action' | 'query'> {
+    identity: Omit<UserIdentity, "tokenIdentifier">
+  ): Pick<ConvexClient, "mutation" | "action" | "query"> {
     return {
       mutation: (functionReference, args) => {
         (this.client as any).setAdminAuth(this._adminKey, identity);
@@ -75,21 +76,21 @@ export class ConvexTestingHelper {
     };
   }
 
-  async mutation<Mutation extends FunctionReference<'mutation'>>(
+  async mutation<Mutation extends FunctionReference<"mutation">>(
     mutation: Mutation,
     args: FunctionArgs<Mutation>
   ): Promise<Awaited<FunctionReturnType<Mutation>>> {
     return this.client.mutation(mutation, args);
   }
 
-  async query<Query extends FunctionReference<'query'>>(
+  async query<Query extends FunctionReference<"query">>(
     query: Query,
     args: FunctionArgs<Query>
   ): Promise<Awaited<FunctionReturnType<Query>>> {
     return this.client.query(query, args);
   }
 
-  async action<Action extends FunctionReference<'action'>>(
+  async action<Action extends FunctionReference<"action">>(
     action: Action,
     args: FunctionArgs<Action>
   ): Promise<Awaited<FunctionReturnType<Action>>> {

@@ -1,16 +1,16 @@
-const http = require('http');
-const readline = require('readline');
-const url = require('url');
-const { spawnSync } = require('child_process');
+const http = require("http");
+const readline = require("readline");
+const url = require("url");
+const { spawnSync } = require("child_process");
 
-const parsedUrl = url.parse('http://127.0.0.1:8000');
+const parsedUrl = url.parse("http://127.0.0.1:8000");
 http
   .request(
     {
       hostname: parsedUrl.hostname,
       port: parsedUrl.port,
-      path: '/version',
-      method: 'GET',
+      path: "/version",
+      method: "GET",
     },
     (res) => {
       if (res.statusCode === 200) {
@@ -20,7 +20,7 @@ http
       }
     }
   )
-  .on('error', onFailure)
+  .on("error", onFailure)
   .end();
 
 function onFailure() {
@@ -29,30 +29,30 @@ function onFailure() {
     output: process.stdout,
   });
 
-  rl.on('SIGINT', () => {
+  rl.on("SIGINT", () => {
     rl.close();
     process.exit(1);
   });
 
   rl.question(
-      "Looks like you don't have local backend running, start it now? [Y/n]: ",
+    "Looks like you don't have local backend running, start it now? [Y/n]: ",
     (answer) => {
       rl.close();
       if (
-        answer.toLowerCase() === 'yes' ||
-        answer.toLowerCase() === 'y' ||
-        answer === ''
+        answer.toLowerCase() === "yes" ||
+        answer.toLowerCase() === "y" ||
+        answer === ""
       ) {
         console.error(
-            'Starting just run-local-backend now via `just run-local-backend`, ' +
-              'repeat your original command in a new terminal'
+          "Starting just run-local-backend now via `just run-local-backend`, " +
+            "repeat your original command in a new terminal"
         );
-        spawnSync('just run-local-backend', { shell: true, stdio: 'inherit' });
-        console.log(chalk.green('Quiting local backend, all is good!'));
+        spawnSync("just run-local-backend", { shell: true, stdio: "inherit" });
+        console.log(chalk.green("Quiting local backend, all is good!"));
         process.exit(1);
       } else {
         console.error(
-            "Make sure to run 'just run-local-backend' in another terminal!"
+          "Make sure to run 'just run-local-backend' in another terminal!"
         );
       }
     }

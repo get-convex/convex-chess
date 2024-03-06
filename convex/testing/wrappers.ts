@@ -1,32 +1,42 @@
-import { customAction, customMutation, customQuery } from "convex-helpers/server/customFunctions"
+import {
+  customAction,
+  customMutation,
+  customQuery,
+} from "convex-helpers/server/customFunctions";
 import { action, mutation, query } from "../_generated/server";
 
 export const testingQuery = customQuery(query, {
   args: {},
   input: async (_ctx, _args) => {
     if (process.env.IS_TEST === undefined) {
-        throw new Error("Calling a test only function in an unexpected environment")
+      throw new Error(
+        "Calling a test only function in an unexpected environment"
+      );
     }
     return { ctx: {}, args: {} };
   },
 });
 
 export const testingMutation = customMutation(mutation, {
-    args: {},
-    input: async (_ctx, _args) => {
-      if (process.env.IS_TEST === undefined) {
-          throw new Error("Calling a test only function in an unexpected environment")
-      }
-      return { ctx: {}, args: {} };
-    },
-  });
+  args: {},
+  input: async (_ctx, _args) => {
+    if (process.env.IS_TEST === undefined) {
+      throw new Error(
+        "Calling a test only function in an unexpected environment"
+      );
+    }
+    return { ctx: {}, args: {} };
+  },
+});
 
-export  const testingAction = customAction(action, {
-    args: {},
-    input: async (_ctx, _args) => {
-      if (process.env.IS_TEST === undefined) {
-          throw new Error("Calling a test only function in an unexpected environment")
-      }
-      return { ctx: {}, args: {} };
-    },
-  });
+export const testingAction = customAction(action, {
+  args: {},
+  input: async (_ctx, _args) => {
+    if (process.env.IS_TEST === undefined) {
+      throw new Error(
+        "Calling a test only function in an unexpected environment"
+      );
+    }
+    return { ctx: {}, args: {} };
+  },
+});
