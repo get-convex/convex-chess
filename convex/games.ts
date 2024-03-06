@@ -1,4 +1,4 @@
-import { api, internal } from './_generated/api';
+import { api, internal } from "./_generated/api";
 import {
   query,
   mutation,
@@ -7,32 +7,32 @@ import {
   internalMutation,
   internalAction,
   internalQuery,
-} from './_generated/server';
-import { Id, Doc } from './_generated/dataModel';
+} from "./_generated/server";
+import { Id, Doc } from "./_generated/dataModel";
 
 import {
   getCurrentPlayer,
   validateMove,
   PlayerId,
   getNextPlayer,
-} from './utils';
+} from "./utils";
 
-import { Chess, Move } from 'chess.js';
-import { getOrCreateUser } from './users';
-import { Scheduler } from 'convex/server';
-import { ConvexError, v } from 'convex/values';
-import { chatCompletion } from './lib/openai';
+import { Chess, Move } from "chess.js";
+import { getOrCreateUser } from "./users";
+import { Scheduler } from "convex/server";
+import { ConvexError, v } from "convex/values";
+import { chatCompletion } from "./lib/openai";
 
 async function playerName(
   db: DatabaseReader,
-  playerId: 'Computer' | Id<'users'> | null
+  playerId: "Computer" | Id<"users"> | null
 ) {
   if (playerId === null) {
-    return '';
-  } else if (playerId == 'Computer') {
+    return "";
+  } else if (playerId == "Computer") {
     return playerId;
   } else {
-    const user = await db.get(playerId as Id<'users'>);
+    const user = await db.get(playerId as Id<"users">);
     if (user === null) {
       throw new Error(`Missing player id ${playerId}`);
     }
@@ -42,7 +42,7 @@ async function playerName(
 
 export async function denormalizePlayerNames(
   db: DatabaseReader,
-  game: Doc<'games'>
+  game: Doc<"games">
 ) {
   return {
     ...game,
@@ -51,7 +51,7 @@ export async function denormalizePlayerNames(
   };
 }
 
-export const get = query(async ({ db }, { id }: { id: Id<'games'> }) => {
+export const get = query(async ({ db }, { id }: { id: Id<"games"> }) => {
   const game = await db.get(id);
   if (!game) {
     throw new Error(`Invalid game ${id}`);
@@ -61,9 +61,9 @@ export const get = query(async ({ db }, { id }: { id: Id<'games'> }) => {
 
 export const ongoingGames = query(async ({ db }) => {
   const games = await db
-    .query('games')
-    .withIndex('finished', (q) => q.eq('finished', false))
-    .order('desc')
+    .query("games")
+    .withIndex("finished", (q) => q.eq("finished", false))
+    .order("desc")
     .take(50);
   const result = [];
   for (let game of games) {
@@ -79,13 +79,13 @@ export const newGame = mutation(
       player1,
       player2,
     }: {
-      player1: null | 'Computer' | 'Me';
-      player2: null | 'Computer' | 'Me';
+      player1: null | "Computer" | "Me";
+      player2: null | "Computer" | "Me";
     }
   ) => {
     const userId = await getOrCreateUser(db, auth);
     let player1Id: PlayerId;
-    if (player1 === 'Me') {
+    if (player1 === "Me") {
       if (!userId) {
         throw new Error("Can't play as unauthenticated user");
       }
@@ -94,7 +94,7 @@ export const newGame = mutation(
       player1Id = player1;
     }
     let player2Id: PlayerId;
-    if (player2 === 'Me') {
+    if (player2 === "Me") {
       if (!userId) {
         throw new Error("Can't play as unauthenticated user");
       }
@@ -104,7 +104,7 @@ export const newGame = mutation(
     }
 
     const game = new Chess();
-    let id: Id<'games'> = await db.insert('games', {
+    let id: Id<"games"> = await db.insert("games", {
       pgn: game.pgn(),
       player1: player1Id,
       player2: player2Id,
@@ -118,10 +118,10 @@ export const newGame = mutation(
 );
 
 export const joinGame = mutation(
-  async ({ db, auth }, { id }: { id: Id<'games'> }) => {
+  async ({ db, auth }, { id }: { id: Id<"games"> }) => {
     const user = await getOrCreateUser(db, auth);
     if (!user) {
-      throw new Error('Trying to join game with unauthenticated user');
+      throw new Error("Trying to join game with unauthenticated user");
     }
     let state = await db.get(id);
     if (state == null) {
@@ -144,7 +144,7 @@ async function _performMove(
   db: DatabaseWriter,
   player: PlayerId,
   scheduler: Scheduler,
-  state: Doc<'games'>,
+  state: Doc<"games">,
   from: string,
   to: string
 ) {
@@ -190,13 +190,13 @@ async function _performMove(
 const boardView = (chess: Chess): string => {
   const rows = [];
   for (const row of chess.board()) {
-    let rowView = '';
+    let rowView = "";
     for (const square of row) {
       if (square === null) {
-        rowView += '.';
+        rowView += ".";
       } else {
         let piece = square.type as string;
-        if (square.color === 'w') {
+        if (square.color === "w") {
           piece = piece.toUpperCase();
         }
         rowView += piece;
@@ -204,12 +204,12 @@ const boardView = (chess: Chess): string => {
     }
     rows.push(rowView);
   }
-  return rows.join('\n');
+  return rows.join("\n");
 };
 
 export const analyzeMove = internalAction({
   args: {
-    gameId: v.id('games'),
+    gameId: v.id("games"),
     moveIndex: v.number(),
     previousPGN: v.string(),
     move: v.string(),
@@ -224,12 +224,12 @@ export const analyzeMove = internalAction({
     const response = await chatCompletion({
       messages: [
         {
-          role: 'user',
+          role: "user",
           content: prompt,
         },
       ],
     });
-    let responseText = '';
+    let responseText = "";
     for await (const chunk of response.content.read()) {
       responseText += chunk;
 
@@ -245,15 +245,15 @@ export const analyzeMove = internalAction({
 
 export const saveAnalysis = internalMutation({
   args: {
-    gameId: v.id('games'),
+    gameId: v.id("games"),
     moveIndex: v.number(),
     analysis: v.string(),
   },
   handler: async (ctx, { gameId, moveIndex, analysis }) => {
     const analysisDoc = await ctx.db
-      .query('analysis')
-      .withIndex('by_game_index', (q) =>
-        q.eq('game', gameId).eq('moveIndex', moveIndex)
+      .query("analysis")
+      .withIndex("by_game_index", (q) =>
+        q.eq("game", gameId).eq("moveIndex", moveIndex)
       )
       .unique();
     if (analysisDoc) {
@@ -261,7 +261,7 @@ export const saveAnalysis = internalMutation({
         analysis,
       });
     } else {
-      await ctx.db.insert('analysis', {
+      await ctx.db.insert("analysis", {
         game: gameId,
         moveIndex,
         analysis,
@@ -271,26 +271,26 @@ export const saveAnalysis = internalMutation({
 });
 
 export const getAnalysis = query({
-  args: { gameId: v.id('games'), moveIndex: v.optional(v.number()) },
+  args: { gameId: v.id("games"), moveIndex: v.optional(v.number()) },
   handler: async (ctx, { gameId, moveIndex }) => {
     const state = await ctx.db.get(gameId);
     if (state === null) {
-      throw new Error('Invalid Game ID');
+      throw new Error("Invalid Game ID");
     }
 
     let analysis;
     if (moveIndex !== undefined) {
       analysis = await ctx.db
-        .query('analysis')
-        .withIndex('by_game_index', (q) =>
-          q.eq('game', gameId).eq('moveIndex', moveIndex)
+        .query("analysis")
+        .withIndex("by_game_index", (q) =>
+          q.eq("game", gameId).eq("moveIndex", moveIndex)
         )
         .unique();
     } else {
       analysis = await ctx.db
-        .query('analysis')
-        .withIndex('by_game_index', (q) => q.eq('game', gameId))
-        .order('desc')
+        .query("analysis")
+        .withIndex("by_game_index", (q) => q.eq("game", gameId))
+        .order("desc")
         .first();
     }
 
@@ -314,11 +314,11 @@ export const getAnalysis = query({
 export const move = mutation(
   async (
     { db, auth, scheduler },
-    { gameId, from, to }: { gameId: Id<'games'>; from: string; to: string }
+    { gameId, from, to }: { gameId: Id<"games">; from: string; to: string }
   ) => {
     const userId = await getOrCreateUser(db, auth);
     if (!userId) {
-      throw new Error('Trying to perform a move with unauthenticated user');
+      throw new Error("Trying to perform a move with unauthenticated user");
     }
 
     // Load the game.
@@ -332,13 +332,13 @@ export const move = mutation(
 );
 
 export const internalGetPgnForComputerMove = query(
-  async ({ db }, { id }: { id: Id<'games'> }) => {
+  async ({ db }, { id }: { id: Id<"games"> }) => {
     let state = await db.get(id);
     if (state == null) {
       throw new Error(`Invalid game ${id}`);
     }
 
-    if (getCurrentPlayer(state) !== 'Computer') {
+    if (getCurrentPlayer(state) !== "Computer") {
       console.log("it's not the computer's turn");
       return null;
     }
@@ -348,20 +348,20 @@ export const internalGetPgnForComputerMove = query(
 
     const possibleMoves = game.moves({ verbose: true });
     if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0) {
-      console.log('no moves');
+      console.log("no moves");
       return null;
     }
 
     const opponent = getNextPlayer(state);
 
-    let strategy = 'default';
-    if (opponent !== 'Computer') {
-      const opponentPlayer = await db.get(opponent as Id<'users'>);
+    let strategy = "default";
+    if (opponent !== "Computer") {
+      const opponentPlayer = await db.get(opponent as Id<"users">);
       const name = opponentPlayer!.name.toLowerCase();
-      if (name.includes('nipunn')) {
-        strategy = 'tricky';
-      } else if (name.includes('preslav')) {
-        strategy = 'hard';
+      if (name.includes("nipunn")) {
+        strategy = "tricky";
+      } else if (name.includes("preslav")) {
+        strategy = "hard";
       }
     }
 
@@ -377,7 +377,7 @@ export const internalMakeComputerMove = internalMutation(
       moveFrom,
       moveTo,
     }: {
-      id: Id<'games'>;
+      id: Id<"games">;
       moveFrom: string;
       moveTo: string;
     }
@@ -386,9 +386,9 @@ export const internalMakeComputerMove = internalMutation(
     if (state == null) {
       throw new Error(`Invalid game ${id}`);
     }
-    if (getCurrentPlayer(state) !== 'Computer') {
+    if (getCurrentPlayer(state) !== "Computer") {
       return;
     }
-    await _performMove(db, 'Computer', scheduler, state, moveFrom, moveTo);
+    await _performMove(db, "Computer", scheduler, state, moveFrom, moveTo);
   }
 );
