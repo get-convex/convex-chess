@@ -68,14 +68,14 @@ describe("games", () => {
     // Test that winning the game marks the game as finished
     await asLee.mutation(api.games.move, { gameId, from: "f8", to: "e8" });
     let game = await t.query(api.games.get, { id: gameId });
-    let ongoingGames = await t.query(api.games.ongoingGames, {})
+    let ongoingGames = await t.query(api.games.ongoingGames, {});
     expect(game.finished).toBe(false);
     expect(ongoingGames.length).toStrictEqual(1);
 
     await asSarah.mutation(api.games.move, { gameId, from: "d6", to: "e7" });
     game = await t.query(api.games.get, { id: gameId });
-    ongoingGames = await t.query(api.games.ongoingGames, {})
+    ongoingGames = await t.query(api.games.ongoingGames, {});
     expect(game.finished).toBe(true);
-    expect(ongoingGames.length).toStrictEqual(0)
+    expect(ongoingGames.length).toStrictEqual(0);
   });
 });
