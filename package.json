@@ -7,7 +7,9 @@
     "dev:server": "convex dev --tail-logs",
     "dev:client": "next dev",
     "dev:init": "convex dev --once",
-    "start": "next start"
+    "start": "next start",
+    "testFunctionsExistingBackend": "just convex deploy && just convex env set IS_TEST true && jest",
+    "testFunctions": "node backendHarness.js 'npm run testFunctionsExistingBackend'"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.0.1",
