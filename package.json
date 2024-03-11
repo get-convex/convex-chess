@@ -15,6 +15,7 @@
     "@auth0/auth0-react": "^2.0.1",
     "chess.js": "^1.0.0-beta.3",
     "convex": "^1.10.0",
+    "convex-helpers": "^0.1.25",
     "js-chess-engine": "^1.0.2",
     "next": "latest",
     "react": "^18.2.0",
