@@ -5,6 +5,9 @@ import {
   } from "convex-helpers/server/customFunctions";
   import { action, mutation, query } from "./_generated/server";
 import schema from "./schema";
+import { WithoutSystemFields } from "convex/server";
+import { Doc } from "./_generated/dataModel";
+import { getOrCreateUser } from "./users";
 
 // Wrappers to use for function that should only be called from tests
 export const testingQuery = customQuery(query, {
@@ -53,4 +56,14 @@ export const clearAll = testingMutation(async ({ db, scheduler, storage }) => {
   await Promise.all(scheduled.map((s) => scheduler.cancel(s._id)));
   const storedFiles = await db.system.query("_storage").collect();
   await Promise.all(storedFiles.map((s) => storage.delete(s._id)));
+});
+
+export const setupGame = testingMutation(
+  async ({ db }, args: WithoutSystemFields<Doc<"games">>) => {
+    return db.insert("games", args);
+  }
+);
+
+export const setupUser = testingMutation(async ({ db, auth }) => {
+  return getOrCreateUser(db, auth);
 });
