@@ -17,7 +17,7 @@ import {
   getNextPlayer,
 } from "./utils";
 
-import { Chess, Move } from "chess.js";
+import { Chess } from "chess.js";
 import { getOrCreateUser } from "./users";
 import { Scheduler } from "convex/server";
 import { ConvexError, v } from "convex/values";
@@ -54,7 +54,7 @@ export async function denormalizePlayerNames(
 export const get = query(async ({ db }, { id }: { id: Id<"games"> }) => {
   const game = await db.get(id);
   if (!game) {
-    throw new Error(`Invalid game ${id}`);
+    throw new Error(`Invalid game ${id}.`);
   }
   return await denormalizePlayerNames(db, game);
 });
