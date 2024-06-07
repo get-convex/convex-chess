@@ -7,7 +7,7 @@ export async function chatCompletion(
 ) {
   checkForAPIKey();
 
-  body.model = body.model ?? "gpt-3.5-turbo-16k";
+  body.model = body.model ?? "gpt-3.5-turbo";
   body.stream = true;
   const stopWords = body.stop
     ? typeof body.stop === "string"
@@ -233,9 +233,9 @@ export interface CreateChatCompletionRequest {
     | "gpt-4-0613"
     | "gpt-4-32k"
     | "gpt-4-32k-0613"
-    | "gpt-3.5-turbo"
+    | "gpt-3.5-turbo" // <- our default
     | "gpt-3.5-turbo-0613"
-    | "gpt-3.5-turbo-16k" // <- our default
+    | "gpt-3.5-turbo-16k"
     | "gpt-3.5-turbo-16k-0613";
   /**
    * The messages to generate chat completions for, in the chat format:
