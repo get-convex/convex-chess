@@ -1,9 +1,9 @@
 import {
-    customAction,
-    customMutation,
-    customQuery,
-  } from "convex-helpers/server/customFunctions";
-  import { action, mutation, query } from "./_generated/server";
+  customAction,
+  customMutation,
+  customQuery,
+} from "convex-helpers/server/customFunctions";
+import { action, mutation, query } from "./_generated/server";
 import schema from "./schema";
 import { WithoutSystemFields } from "convex/server";
 import { Doc } from "./_generated/dataModel";
@@ -45,7 +45,6 @@ export const testingAction = customAction(action, {
     return { ctx: {}, args: {} };
   },
 });
-
 
 export const clearAll = testingMutation(async ({ db, scheduler, storage }) => {
   for (const table of Object.keys(schema.tables)) {

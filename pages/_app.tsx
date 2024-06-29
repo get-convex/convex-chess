@@ -40,6 +40,7 @@ function App(props: AppProps) {
 
 function MyApp({ Component, pageProps }: AppProps) {
   const { user, loginWithRedirect, logout } = useAuth0();
+  const { isLoading, isAuthenticated } = useConvexAuth();
 
   const [searchInput, setSearchInput] = useState("");
 
@@ -98,7 +99,9 @@ function MyApp({ Component, pageProps }: AppProps) {
       </div>
       <h1>Convex Chess</h1>
       <div className="badge">
-        {user ? (
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : isAuthenticated && user ? (
           <div>
             <Link className="profileLink" href={`/user/${userId}`}>
               {user.name}
