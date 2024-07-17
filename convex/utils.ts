@@ -61,7 +61,8 @@ export function validateMove(
   state: Doc<"games">,
   player: PlayerId,
   from: string,
-  to: string
+  to: string,
+  finalPiece: string
 ): Chess | null {
   if (!playerEquals(getCurrentPlayer(state), player)) {
     // Wrong player.
@@ -75,8 +76,8 @@ export function validateMove(
   } catch {
     // This is lame but try promoting.
     try {
-      valid = game.move({ from, to, promotion: "q" });
-      console.log("promoted a pawn");
+      valid = game.move({ from, to, promotion: finalPiece });
+      console.log(`promoted a pawn to ${finalPiece}`);
     } catch {
       console.log(`invalid move ${from}->${to}`);
       valid = null;

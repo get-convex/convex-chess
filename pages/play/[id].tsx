@@ -1,6 +1,6 @@
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "next/router";
-import { Chess, Move } from "chess.js";
+import { Chess, Move, Square } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
 import { useMutation, useQuery } from "convex/react";
@@ -8,6 +8,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { validateMove, isOpen, playerEquals } from "../../convex/utils";
 import { gameTitle } from "../../common";
 import { useEffect, useState } from "react";
+import { Piece } from "react-chessboard/dist/chessboard/types";
 
 export default function () {
   const router = useRouter();
@@ -33,12 +34,17 @@ export default function () {
     ) ?? {};
 
   const performMove = useMutation(api.games.move).withOptimisticUpdate(
-    (localStore, { gameId, from, to }) => {
+    (localStore, { gameId, from, to, finalPiece }) => {
       const state = localStore.getQuery(api.games.get, { id: gameId });
       if (state) {
         const game = new Chess();
         game.loadPgn(state.pgn);
-        game.move({ from, to });
+        // This is lame but try promoting.
+        try {
+          game.move({ from, to });
+        } catch {
+          game.move({ from, to, promotion: finalPiece });
+        }
         const newState = { ...state };
         newState.pgn = game.pgn();
         console.log("nextState", game.history(), gameId);
@@ -67,21 +73,37 @@ export default function () {
     setSelectedMove(i * 2 + 1);
   };
 
-  async function onDrop(sourceSquare: string, targetSquare: string) {
+  async function onDrop(
+    sourceSquare: Square,
+    targetSquare: Square,
+    piece: Piece
+  ) {
+    const finalPiece = piece[1].toLowerCase();
     let nextState = validateMove(
       gameState!,
       userId,
       sourceSquare,
-      targetSquare
+      targetSquare,
+      finalPiece
     );
     if (nextState) {
-      await performMove({ gameId, from: sourceSquare, to: targetSquare });
+      await performMove({
+        gameId,
+        from: sourceSquare,
+        to: targetSquare,
+        finalPiece,
+      });
       setSelectedMove(undefined);
     } else {
       setMainStyle({ backgroundColor: "red" });
       setTimeout(() => setMainStyle({}), 50);
       try {
-        await tryPerformMove({ gameId, from: sourceSquare, to: targetSquare });
+        await tryPerformMove({
+          gameId,
+          from: sourceSquare,
+          to: targetSquare,
+          finalPiece,
+        });
       } catch (error) {
         console.log(error);
       }
@@ -114,9 +136,11 @@ export default function () {
           <Chessboard
             boardWidth={560}
             position={game.fen()}
-            // @ts-ignore
-            onPieceDrop={onDrop}
+            onPieceDrop={(source, target, piece) =>
+              onDrop(source, target, piece) as unknown as boolean
+            }
             boardOrientation={boardOrientation}
+            showPromotionDialog
           />
         </div>
         <div className="moves">

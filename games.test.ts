@@ -32,13 +32,23 @@ describe("games", () => {
     game = await t.query(api.games.get, { id: gameId });
     expect(game.player2Name).toEqual("Lee");
 
-    await asSarah.mutation(api.games.move, { gameId, from: "c2", to: "c3" });
+    await asSarah.mutation(api.games.move, {
+      gameId,
+      from: "c2",
+      to: "c3",
+      finalPiece: "p",
+    });
     game = await t.query(api.games.get, { id: gameId });
     expect(game.pgn).toEqual("1. c3");
 
     // Invalid move -- out of turn
     expect(() =>
-      asSarah.mutation(api.games.move, { gameId, from: "d2", to: "d3" })
+      asSarah.mutation(api.games.move, {
+        gameId,
+        from: "d2",
+        to: "d3",
+        finalPiece: "p",
+      })
     ).rejects.toThrow(/invalid move d2-d3/);
     game = await t.query(api.games.get, { id: gameId });
     expect(game.pgn).toEqual("1. c3");
@@ -66,16 +76,27 @@ describe("games", () => {
     });
 
     // Test that winning the game marks the game as finished
-    await asLee.mutation(api.games.move, { gameId, from: "f8", to: "e8" });
+    await asLee.mutation(api.games.move, {
+      gameId,
+      from: "f8",
+      to: "e8",
+      finalPiece: "k",
+    });
     let game = await t.query(api.games.get, { id: gameId });
-    let ongoingGames = await t.query(api.games.ongoingGames, {})
+    let ongoingGames = await t.query(api.games.ongoingGames, {});
     expect(game.finished).toBe(false);
     expect(ongoingGames.length).toStrictEqual(1);
 
-    await asSarah.mutation(api.games.move, { gameId, from: "d6", to: "e7" });
+    await asSarah.mutation(api.games.move, {
+      gameId,
+      from: "d6",
+      to: "e7",
+      finalPiece: "q",
+    });
     game = await t.query(api.games.get, { id: gameId });
-    ongoingGames = await t.query(api.games.ongoingGames, {})
+    ongoingGames = await t.query(api.games.ongoingGames, {});
     expect(game.finished).toBe(true);
-    expect(ongoingGames.length).toStrictEqual(0)
+    expect(ongoingGames.length).toStrictEqual(0);
   });
 });
+
