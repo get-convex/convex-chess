@@ -146,10 +146,11 @@ async function _performMove(
   scheduler: Scheduler,
   state: Doc<"games">,
   from: string,
-  to: string
+  to: string,
+  finalPiece: string
 ) {
   const currentPGN = state.pgn;
-  let nextState = validateMove(state, player, from, to);
+  let nextState = validateMove(state, player, from, to, finalPiece);
   if (!nextState) {
     // Invalid move.
     throw new ConvexError(`invalid move ${from}-${to}`);
@@ -311,10 +312,16 @@ export const getAnalysis = query({
   },
 });
 
-export const move = mutation(
-  async (
+export const move = mutation({
+  args: {
+    gameId: v.id("games"),
+    from: v.string(),
+    to: v.string(),
+    finalPiece: v.string(),
+  },
+  handler: async (
     { db, auth, scheduler },
-    { gameId, from, to }: { gameId: Id<"games">; from: string; to: string }
+    { gameId, from, to, finalPiece }
   ) => {
     const userId = await getOrCreateUser(db, auth);
     if (!userId) {
@@ -327,9 +334,9 @@ export const move = mutation(
       throw new Error(`Invalid game ${gameId}`);
     }
 
-    await _performMove(db, userId, scheduler, state, from, to);
-  }
-);
+    await _performMove(db, userId, scheduler, state, from, to, finalPiece);
+  },
+});
 
 export const internalGetPgnForComputerMove = query(
   async ({ db }, { id }: { id: Id<"games"> }) => {
@@ -369,19 +376,14 @@ export const internalGetPgnForComputerMove = query(
   }
 );
 
-export const internalMakeComputerMove = internalMutation(
-  async (
-    { db, scheduler },
-    {
-      id,
-      moveFrom,
-      moveTo,
-    }: {
-      id: Id<"games">;
-      moveFrom: string;
-      moveTo: string;
-    }
-  ) => {
+export const internalMakeComputerMove = internalMutation({
+  args: {
+    id: v.id("games"),
+    moveFrom: v.string(),
+    moveTo: v.string(),
+    finalPiece: v.string(),
+  },
+  handler: async ({ db, scheduler }, { id, moveFrom, moveTo, finalPiece }) => {
     let state = await db.get(id);
     if (state == null) {
       throw new Error(`Invalid game ${id}`);
@@ -389,6 +391,14 @@ export const internalMakeComputerMove = internalMutation(
     if (getCurrentPlayer(state) !== "Computer") {
       return;
     }
-    await _performMove(db, "Computer", scheduler, state, moveFrom, moveTo);
-  }
-);
+    await _performMove(
+      db,
+      "Computer",
+      scheduler,
+      state,
+      moveFrom,
+      moveTo,
+      finalPiece
+    );
+  },
+});

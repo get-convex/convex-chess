@@ -40,6 +40,7 @@ export const maybeMakeComputerMove = internalAction(
       id,
       moveFrom: moveFrom.toLowerCase(),
       moveTo: moveTo.toLowerCase(),
+      finalPiece: "q", // js-chess-engine only knows how to promote queen
     });
   }
 );
