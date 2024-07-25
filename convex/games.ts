@@ -67,6 +67,7 @@ export const ongoingGames = query(async ({ db }) => {
     .take(50);
   const result = [];
   for (let game of games) {
+    console.log(game._id);
     result.push(await denormalizePlayerNames(db, game));
   }
   return result;
