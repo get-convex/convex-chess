@@ -221,7 +221,7 @@ export const analyzeMove = internalAction({
     const boardState = boardView(game);
     const _boardState = game.fen();
     const oldPrompt = `Analyze just the move at index ${moveIndex} in this chess game. Only tell me about the effect of that move.: ${game.history()}.`;
-    const prompt = `You are a chess expert. I am playing a chess game. The board looks like this:\n${boardState}\n\nAnalyze the effect of playing the move ${move}. Please analyze concisely, with less than 20 words.`;
+    const prompt = `You are a chess expert. I am playing a chess game. The board looks like this:\n${boardState}\n\nAnalyze the effect of playing the move ${move}. Please analyze concisely, with less than 20 words. Then conclude with an over-the-top sentence describing sarcastic, flippant, or humorous feelings about the move.`;
     const response = await chatCompletion({
       messages: [
         {
