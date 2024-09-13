@@ -1,15 +1,13 @@
 import { api } from "../convex/_generated/api";
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
+import { ConvexAuthProvider, useAuthActions } from "@convex-dev/auth/react";
 
 import { ConvexReactClient, useQuery } from "convex/react";
-import { ConvexProviderWithAuth0 } from "convex/react-auth0";
 
-import { useAuth0, Auth0Provider } from "@auth0/auth0-react";
 import { useState } from "react";
 import Link from "next/link";
 import { gameTitle } from "../common";
-import { Game } from "../convex/search";
 
 const address = process.env.NEXT_PUBLIC_CONVEX_URL;
 if (!address) {
@@ -20,30 +18,20 @@ const convex = new ConvexReactClient(address);
 function App(props: AppProps) {
   return (
     <div>
-      <Auth0Provider
-        domain={process.env.NEXT_PUBLIC_AUTH0_DOMAIN!}
-        clientId={process.env.NEXT_PUBLIC_CLIENT_ID!}
-        authorizationParams={{
-          redirect_uri:
-            typeof window !== "undefined" ? window.location.origin : "",
-        }}
-        useRefreshTokens={true}
-        cacheLocation="localstorage"
-      >
-        <ConvexProviderWithAuth0 client={convex}>
-          <MyApp {...props} />
-        </ConvexProviderWithAuth0>
-      </Auth0Provider>
+      <ConvexAuthProvider client={convex}>
+        <MyApp {...props} />
+      </ConvexAuthProvider>
     </div>
   );
 }
 
 function MyApp({ Component, pageProps }: AppProps) {
-  const { user, loginWithRedirect, logout } = useAuth0();
+  const { signIn, signOut } = useAuthActions();
 
   const [searchInput, setSearchInput] = useState("");
 
-  const userId = useQuery(api.users.getMyUser) || null;
+  const user = useQuery(api.users.getMyUser) || null;
+  console.log("user", user);
 
   const handleChange = (e: any) => {
     e.preventDefault();
@@ -100,17 +88,17 @@ function MyApp({ Component, pageProps }: AppProps) {
       <div className="badge">
         {user ? (
           <div>
-            <Link className="profileLink" href={`/user/${userId}`}>
+            <Link className="profileLink" href={`/user/${user._id}`}>
               {user.name}
             </Link>
-            <button className="btn btn-secondary" onClick={() => logout()}>
+            <button className="btn btn-secondary" onClick={() => signOut()}>
               Logout
             </button>
           </div>
         ) : (
           <button
             className="btn btn-secondary"
-            onClick={() => loginWithRedirect()}
+            onClick={() => signIn("google")}
           >
             Login
           </button>

@@ -18,7 +18,7 @@ export default function () {
     : undefined;
 
   const gameState = useQuery(api.games.get, { id: gameId });
-  const userId = useQuery(api.users.getMyUser) ?? null;
+  const user = useQuery(api.users.getMyUser) ?? null;
   const [selectedMove, setSelectedMove] = useState<undefined | number>(moveIdx);
   const [mainStyle, setMainStyle] = useState<{ backgroundColor?: string }>({});
 
@@ -81,7 +81,7 @@ export default function () {
     const finalPiece = piece[1].toLowerCase();
     let nextState = validateMove(
       gameState!,
-      userId,
+      user?._id ?? null,
       sourceSquare,
       targetSquare,
       finalPiece
@@ -124,7 +124,10 @@ export default function () {
     turns.push({ num: turns.length + 1, whiteMove, blackMove });
   }
 
-  const boardOrientation = playerEquals(userId, gameState.player2 as any)
+  const boardOrientation = playerEquals(
+    user?._id ?? null,
+    gameState.player2 as any
+  )
     ? "black"
     : "white";
 

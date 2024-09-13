@@ -8,8 +8,8 @@ import { api } from "../../convex/_generated/api";
 export default function () {
   const router = useRouter();
   const userId = router.query.id as Id<"users">;
-  const user = useQuery(api.users.get, { id: userId }) || null;
-  const myUserId = useQuery(api.users.getMyUser) ?? null;
+  const user = useQuery(api.users.get, { id: userId }) ?? null;
+  const myUser = useQuery(api.users.getMyUser) ?? null;
 
   const imageInput = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -50,7 +50,7 @@ export default function () {
         </div>
       )}
       <div>{user?.name}</div>
-      {user && user._id === myUserId ? (
+      {user && user._id === myUser?._id ? (
         <form onSubmit={handleSetProfilePic}>
           <input
             type="file"

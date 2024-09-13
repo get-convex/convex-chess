@@ -5,6 +5,7 @@
    */
   "compilerOptions": {
     /* These settings are not required by Convex and can be modified. */
+    "skipLibCheck": true,
     "allowJs": true,
     "strict": true,
 
@@ -14,7 +15,7 @@
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "isolatedModules": true,
     "noEmit": true
   },

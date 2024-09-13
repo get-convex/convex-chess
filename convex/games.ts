@@ -18,10 +18,10 @@ import {
 } from "./utils";
 
 import { Chess } from "chess.js";
-import { getOrCreateUser } from "./users";
 import { Scheduler } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { chatCompletion } from "./lib/openai";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 async function playerName(
   db: DatabaseReader,
@@ -36,7 +36,7 @@ async function playerName(
     if (user === null) {
       throw new Error(`Missing player id ${playerId}`);
     }
-    return user.name;
+    return user.name ?? "Unknown";
   }
 }
 
@@ -83,7 +83,7 @@ export const newGame = mutation(
       player2: null | "Computer" | "Me";
     }
   ) => {
-    const userId = await getOrCreateUser(db, auth);
+    const userId = await getAuthUserId({ auth });
     let player1Id: PlayerId;
     if (player1 === "Me") {
       if (!userId) {
@@ -119,8 +119,8 @@ export const newGame = mutation(
 
 export const joinGame = mutation(
   async ({ db, auth }, { id }: { id: Id<"games"> }) => {
-    const user = await getOrCreateUser(db, auth);
-    if (!user) {
+    const userId = await getAuthUserId({ auth });
+    if (!userId) {
       throw new Error("Trying to join game with unauthenticated user");
     }
     let state = await db.get(id);
@@ -128,13 +128,13 @@ export const joinGame = mutation(
       throw new Error(`Invalid game ${id}`);
     }
 
-    if (!state.player1 && user !== state.player2) {
+    if (!state.player1 && userId !== state.player2) {
       await db.patch(id, {
-        player1: user,
+        player1: userId,
       });
-    } else if (!state.player2 && user !== state.player1) {
+    } else if (!state.player2 && userId !== state.player1) {
       await db.patch(id, {
-        player2: user,
+        player2: userId,
       });
     }
   }
@@ -323,7 +323,7 @@ export const move = mutation({
     { db, auth, scheduler },
     { gameId, from, to, finalPiece }
   ) => {
-    const userId = await getOrCreateUser(db, auth);
+    const userId = await getAuthUserId({ auth });
     if (!userId) {
       throw new Error("Trying to perform a move with unauthenticated user");
     }
@@ -364,10 +364,10 @@ export const internalGetPgnForComputerMove = query(
     let strategy = "default";
     if (opponent !== "Computer") {
       const opponentPlayer = await db.get(opponent as Id<"users">);
-      const name = opponentPlayer!.name.toLowerCase();
-      if (name.includes("nipunn")) {
+      const name = opponentPlayer?.name?.toLowerCase();
+      if (name?.includes("nipunn")) {
         strategy = "tricky";
-      } else if (name.includes("preslav")) {
+      } else if (name?.includes("preslav")) {
         strategy = "hard";
       }
     }

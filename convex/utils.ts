@@ -18,7 +18,7 @@ export async function playerName(
   if (!p) {
     return "invalid-player-id";
   }
-  return p.name;
+  return p.name ?? "Unknown";
 }
 
 export function playerEquals(player1: PlayerId, player2: PlayerId) {

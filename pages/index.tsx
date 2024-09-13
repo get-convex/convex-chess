@@ -6,12 +6,10 @@ import { isOpen, hasPlayer } from "../convex/utils";
 import { gameTitle } from "../common";
 
 import { useRouter } from "next/router";
-import { useAuth0 } from "@auth0/auth0-react";
 
 export default function () {
   const router = useRouter();
-
-  const { user } = useAuth0();
+  const user = useQuery(api.users.getMyUser) ?? null;
 
   const ongoingGames = useQuery(api.games.ongoingGames) || [];
   const userId = useQuery(api.users.getMyUser) ?? null;
@@ -95,7 +93,7 @@ export default function () {
                     id={game._id.toString()}
                     type="submit"
                     value={
-                      hasPlayer(game, userId)
+                      hasPlayer(game, user?._id ?? null)
                         ? "Rejoin"
                         : isOpen(game)
                         ? "Join"
