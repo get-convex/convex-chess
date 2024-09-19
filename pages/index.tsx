@@ -12,7 +12,6 @@ export default function () {
   const user = useQuery(api.users.getMyUser) ?? null;
 
   const ongoingGames = useQuery(api.games.ongoingGames) || [];
-  const userId = useQuery(api.users.getMyUser) ?? null;
   const startNewGame = useMutation(api.games.newGame);
 
   async function newGame(event: FormEvent) {

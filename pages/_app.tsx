@@ -3,11 +3,12 @@ import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import { ConvexAuthProvider, useAuthActions } from "@convex-dev/auth/react";
 
-import { ConvexReactClient, useQuery } from "convex/react";
+import { ConvexReactClient, useConvexAuth, useQuery } from "convex/react";
 
 import { useState } from "react";
 import Link from "next/link";
 import { gameTitle } from "../common";
+import { useRouter } from "next/router";
 
 const address = process.env.NEXT_PUBLIC_CONVEX_URL;
 if (!address) {
@@ -16,9 +17,15 @@ if (!address) {
 const convex = new ConvexReactClient(address);
 
 function App(props: AppProps) {
+  const router = useRouter();
   return (
     <div>
-      <ConvexAuthProvider client={convex}>
+      <ConvexAuthProvider
+        client={convex}
+        replaceURL={(relativeUrl) => {
+          router.replace(relativeUrl);
+        }}
+      >
         <MyApp {...props} />
       </ConvexAuthProvider>
     </div>
@@ -27,20 +34,28 @@ function App(props: AppProps) {
 
 function MyApp({ Component, pageProps }: AppProps) {
   const { signIn, signOut } = useAuthActions();
+  const convexAuthState = useConvexAuth();
 
   const [searchInput, setSearchInput] = useState("");
 
   const user = useQuery(api.users.getMyUser) || null;
-  console.log("user", user);
+  const isAuthenticated = convexAuthState.isAuthenticated && user !== null;
+  const isUnauthenticated =
+    !convexAuthState.isLoading && !convexAuthState.isAuthenticated;
 
   const handleChange = (e: any) => {
     e.preventDefault();
     setSearchInput(e.target.value);
   };
 
-  const searchResults = useQuery(api.search.default, {
-    query: searchInput,
-  }) || { users: [], games: [] };
+  const searchResults = useQuery(
+    api.search.default,
+    searchInput === ""
+      ? "skip"
+      : {
+          query: searchInput,
+        }
+  ) || { users: [], games: [] };
   return (
     <div>
       <div className="convexImage">
@@ -86,7 +101,14 @@ function MyApp({ Component, pageProps }: AppProps) {
       </div>
       <h1>Convex Chess</h1>
       <div className="badge">
-        {user ? (
+        {isUnauthenticated ? (
+          <button
+            className="btn btn-secondary"
+            onClick={() => signIn("google")}
+          >
+            Login
+          </button>
+        ) : isAuthenticated ? (
           <div>
             <Link className="profileLink" href={`/user/${user._id}`}>
               {user.name}
@@ -96,12 +118,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             </button>
           </div>
         ) : (
-          <button
-            className="btn btn-secondary"
-            onClick={() => signIn("google")}
-          >
-            Login
-          </button>
+          <button className="btn btn-secondary">Loading...</button>
         )}
       </div>
       <Component {...pageProps} />
