@@ -1,21 +1,23 @@
-import { api } from "../../convex/_generated/api";
-import { useRouter } from "next/router";
+"use client";
+import { api } from "../../../convex/_generated/api";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Chess, Move, Square } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
 import { useMutation, useQuery } from "convex/react";
-import { Id } from "../../convex/_generated/dataModel";
-import { validateMove, isOpen, playerEquals } from "../../convex/utils";
-import { gameTitle } from "../../common";
+import { Id } from "../../../convex/_generated/dataModel";
+import { validateMove, isOpen, playerEquals } from "../../../convex/utils";
+import { gameTitle } from "../../../common";
 import { useEffect, useState } from "react";
 import { Piece } from "react-chessboard/dist/chessboard/types";
 
-export default function () {
-  const router = useRouter();
-  const gameId = router.query.id as Id<"games">;
-  const moveIdx = router.query.moveIndex
-    ? Number(router.query.moveIndex)
-    : undefined;
+export default function Game({ params }: { params: { id: string } }) {
+  const gameId = params.id as Id<"games">;
+  const searchParams = useSearchParams();
+  const moveIdx =
+    searchParams.get("moveIndex") !== undefined
+      ? Number(searchParams.get("moveIndex"))
+      : undefined;
 
   const gameState = useQuery(api.games.get, { id: gameId });
   const user = useQuery(api.users.getMyUser) ?? null;
@@ -132,7 +134,7 @@ export default function () {
     : "white";
 
   return (
-    <main style={mainStyle}>
+    <main style={{ ...mainStyle, gap: 8 }}>
       <div>{gameTitle(gameState)}</div>
       <div className="game">
         <div className="board">
