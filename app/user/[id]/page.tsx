@@ -1,13 +1,11 @@
-import { useRouter } from "next/router";
-
+"use client";
 import { useQuery, useMutation } from "convex/react";
 import { useRef, useState } from "react";
-import { Id } from "../../convex/_generated/dataModel";
-import { api } from "../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
+import { api } from "../../../convex/_generated/api";
 
-export default function () {
-  const router = useRouter();
-  const userId = router.query.id as Id<"users">;
+export default function Profile({ params }: { params: { id: string } }) {
+  const userId = params.id as Id<"users">;
   const user = useQuery(api.users.get, { id: userId }) ?? null;
   const myUser = useQuery(api.users.getMyUser) ?? null;
 
