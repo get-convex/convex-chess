@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
-    "@convex-dev/auth": "^0.0.69",
+    "@convex-dev/auth": "^0.0.70",
     "chess.js": "^1.0.0-beta.3",
     "convex": "^1.10.0",
     "convex-helpers": "^0.1.25",
