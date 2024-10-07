@@ -1,21 +1,20 @@
 {
   "private": true,
   "scripts": {
-    "dev": "npm-run-all init dev:init --parallel dev:server dev:client",
+    "dev": "npm-run-all --parallel dev:backend dev:frontend",
+    "predev": "convex dev --until-success",
     "build": "tsc && next build",
-    "init": "convex init",
-    "dev:server": "convex dev --tail-logs",
-    "dev:client": "next dev",
-    "dev:init": "convex dev --once",
-    "start": "next start",
+    "dev:backend": "convex dev",
+    "dev:frontend": "next dev",
     "testFunctionsExistingBackend": "just convex deploy && just convex env set IS_TEST true && jest",
     "testFunctions": "node backendHarness.js 'npm run testFunctionsExistingBackend'"
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
     "@convex-dev/auth": "^0.0.71-alpha.0",
+    "@convex-dev/aggregate": "^0.1.12",
     "chess.js": "^1.0.0-beta.3",
-    "convex": "^1.10.0",
+    "convex": "^1.16.3",
     "convex-helpers": "^0.1.25",
     "js-chess-engine": "^1.0.2",
     "next": "^14.2.13",
