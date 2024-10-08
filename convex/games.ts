@@ -7,6 +7,7 @@ import {
   internalMutation,
   internalAction,
   internalQuery,
+  MutationCtx,
 } from "./_generated/server";
 import { Id, Doc } from "./_generated/dataModel";
 
@@ -22,6 +23,7 @@ import { Scheduler } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { chatCompletion } from "./lib/openai";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { aggregate } from ".";
 
 async function playerName(
   db: DatabaseReader,
@@ -141,9 +143,8 @@ export const joinGame = mutation(
 );
 
 async function _performMove(
-  db: DatabaseWriter,
+  ctx: MutationCtx,
   player: PlayerId,
-  scheduler: Scheduler,
   state: Doc<"games">,
   from: string,
   to: string,
@@ -157,8 +158,8 @@ async function _performMove(
   }
 
   if (nextState.isGameOver()) {
-    const currentPlayer = await playerName(db, getCurrentPlayer(state));
-    const nextPlayer = await playerName(db, getNextPlayer(state));
+    const currentPlayer = await playerName(ctx.db, getCurrentPlayer(state));
+    const nextPlayer = await playerName(ctx.db, getNextPlayer(state));
 
     if (nextState.isCheckmate()) {
       console.log(`Checkmate! ${currentPlayer} beat ${nextPlayer}`);
@@ -170,20 +171,22 @@ async function _performMove(
     }
   }
 
-  await db.patch(state._id, {
+  await ctx.db.patch(state._id, {
     pgn: nextState.pgn(),
     finished: nextState.isGameOver(),
   });
-
   const history = nextState.history();
-  await scheduler.runAfter(0, internal.games.analyzeMove, {
+  const move = history[history.length - 1];
+  await ctx.scheduler.runAfter(0, internal.games.analyzeMove, {
     gameId: state._id,
     moveIndex: history.length - 1,
     previousPGN: currentPGN,
-    move: history[history.length - 1],
+    move,
   });
 
-  await scheduler.runAfter(1000, internal.engine.maybeMakeComputerMove, {
+  await aggregate.insert(ctx, move, `${state._id}:${history.length - 1}`, 1);
+
+  await ctx.scheduler.runAfter(1000, internal.engine.maybeMakeComputerMove, {
     id: state._id,
   });
 }
@@ -319,22 +322,18 @@ export const move = mutation({
     to: v.string(),
     finalPiece: v.string(),
   },
-  handler: async (
-    { db, auth, scheduler },
-    { gameId, from, to, finalPiece }
-  ) => {
-    const userId = await getAuthUserId({ auth });
+  handler: async (ctx, { gameId, from, to, finalPiece }) => {
+    const userId = await getAuthUserId(ctx);
     if (!userId) {
       throw new Error("Trying to perform a move with unauthenticated user");
     }
 
     // Load the game.
-    let state = await db.get(gameId);
+    let state = await ctx.db.get(gameId);
     if (state == null) {
       throw new Error(`Invalid game ${gameId}`);
     }
-
-    await _performMove(db, userId, scheduler, state, from, to, finalPiece);
+    await _performMove(ctx, userId, state, from, to, finalPiece);
   },
 });
 
@@ -383,22 +382,26 @@ export const internalMakeComputerMove = internalMutation({
     moveTo: v.string(),
     finalPiece: v.string(),
   },
-  handler: async ({ db, scheduler }, { id, moveFrom, moveTo, finalPiece }) => {
-    let state = await db.get(id);
+  handler: async (ctx, { id, moveFrom, moveTo, finalPiece }) => {
+    let state = await ctx.db.get(id);
     if (state == null) {
       throw new Error(`Invalid game ${id}`);
     }
     if (getCurrentPlayer(state) !== "Computer") {
       return;
     }
-    await _performMove(
-      db,
-      "Computer",
-      scheduler,
-      state,
-      moveFrom,
-      moveTo,
-      finalPiece
-    );
+    await _performMove(ctx, "Computer", state, moveFrom, moveTo, finalPiece);
+  },
+});
+
+export const getMoveCount = query({
+  args: { move: v.string() },
+  returns: v.number(),
+  handler: async (ctx, { move }) => {
+    const count = await aggregate.sum(ctx, {
+      lower: { key: move, inclusive: true },
+      upper: { key: move, inclusive: true },
+    });
+    return count;
   },
 });

@@ -25,6 +25,9 @@ export function SearchBar() {
           query: searchInput,
         }
   ) || { users: [], games: [] };
+
+  const count = useQuery(api.games.getMoveCount, searchInput === "" ? "skip" : { move: searchInput });
+
   return (
     <div style={{ position: "absolute", top: "0", left: "0" }}>
       <div className="convexImage">
@@ -65,6 +68,7 @@ export function SearchBar() {
                 </td>
               </tr>
             ))}
+            {count !== undefined && <tr><td>Count: {count}</td></tr>}
           </tbody>
         </table>
       </div>
