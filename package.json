@@ -10,9 +10,9 @@
     "testFunctions": "node backendHarness.js 'npm run testFunctionsExistingBackend'"
   },
   "dependencies": {
-    "@auth/core": "^0.34.2",
-    "@convex-dev/auth": "^0.0.71-alpha.0",
+    "@auth/core": "^0.37.0",
     "@convex-dev/aggregate": "^0.1.12",
+    "@convex-dev/auth": "^0.0.80",
     "chess.js": "^1.0.0-beta.3",
     "convex": "^1.16.3",
     "convex-helpers": "^0.1.25",
