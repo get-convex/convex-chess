@@ -27,7 +27,7 @@ import { aggregate } from "./index";
 import { Workpool } from "@convex-dev/workpool";
 
 const analysisWorkpool = new Workpool(components.analysisWorkpool, {
-  maxParallelism: 2,
+  maxParallelism: 10,
 });
 
 async function playerName(
