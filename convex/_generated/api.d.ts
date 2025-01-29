@@ -1,5 +1,3 @@
-/* prettier-ignore-start */
-
 /* eslint-disable */
 /**
  * Generated `api` utility.
@@ -167,6 +165,43 @@ export declare const components: {
       >;
     };
   };
+  analysisWorkpool: {
+    lib: {
+      cancel: FunctionReference<"mutation", "internal", { id: string }, any>;
+      cleanup: FunctionReference<
+        "mutation",
+        "internal",
+        { maxAgeMs: number },
+        any
+      >;
+      enqueue: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          fnArgs: any;
+          fnHandle: string;
+          fnName: string;
+          fnType: "action" | "mutation";
+          options: {
+            logLevel?: "DEBUG" | "INFO" | "WARN" | "ERROR";
+            maxParallelism: number;
+            statusTtl?: number;
+          };
+        },
+        string
+      >;
+      status: FunctionReference<
+        "query",
+        "internal",
+        { id: string },
+        | { kind: "pending" }
+        | { kind: "inProgress" }
+        | {
+            completionStatus: "success" | "error" | "canceled" | "timeout";
+            kind: "completed";
+          }
+      >;
+      stopCleanup: FunctionReference<"mutation", "internal", {}, any>;
+    };
+  };
 };
-
-/* prettier-ignore-end */

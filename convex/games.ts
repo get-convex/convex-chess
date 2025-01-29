@@ -1,4 +1,4 @@
-import { api, internal } from "./_generated/api";
+import { api, components, internal } from "./_generated/api";
 import {
   query,
   mutation,
@@ -23,7 +23,12 @@ import { Scheduler } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { chatCompletion } from "./lib/openai";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { aggregate } from ".";
+import { aggregate } from "./index";
+import { Workpool } from "@convex-dev/workpool";
+
+const analysisWorkpool = new Workpool(components.analysisWorkpool, {
+  maxParallelism: 2,
+});
 
 async function playerName(
   db: DatabaseReader,
@@ -177,7 +182,7 @@ async function _performMove(
   });
   const history = nextState.history();
   const move = history[history.length - 1];
-  await ctx.scheduler.runAfter(0, internal.games.analyzeMove, {
+  await analysisWorkpool.enqueueAction(ctx, internal.games.analyzeMove, {
     gameId: state._id,
     moveIndex: history.length - 1,
     previousPGN: currentPGN,
