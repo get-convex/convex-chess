@@ -15,7 +15,7 @@ export default function Game({ params }: { params: { id: string } }) {
   const gameId = params.id as Id<"games">;
   const searchParams = useSearchParams();
   const moveIdx =
-    searchParams.get("moveIndex") !== undefined
+    searchParams.get("moveIndex") !== null
       ? Number(searchParams.get("moveIndex"))
       : undefined;
 
