@@ -1,5 +1,3 @@
-/* prettier-ignore-start */
-
 /* eslint-disable */
 /**
  * Generated `api` utility.
@@ -168,5 +166,3 @@ export declare const components: {
     };
   };
 };
-
-/* prettier-ignore-end */

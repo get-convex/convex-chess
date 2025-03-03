@@ -14,7 +14,7 @@
     "@convex-dev/aggregate": "^0.1.12",
     "@convex-dev/auth": "^0.0.81-alpha.0",
     "chess.js": "^1.0.0-beta.3",
-    "convex": "^1.18.1",
+    "convex": "^1.19.4",
     "convex-helpers": "^0.1.25",
     "js-chess-engine": "^1.0.2",
     "next": "^14.2.13",
