@@ -24,6 +24,7 @@ import { ConvexError, v } from "convex/values";
 import { chatCompletion } from "./lib/openai";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { aggregate } from ".";
+import { createStream } from "./analyze";
 
 async function playerName(
   db: DatabaseReader,
@@ -53,12 +54,21 @@ export async function denormalizePlayerNames(
   };
 }
 
-export const get = query(async ({ db }, { id }: { id: Id<"games"> }) => {
-  const game = await db.get(id);
-  if (!game) {
-    throw new Error(`Invalid game ${id}.`);
-  }
-  return await denormalizePlayerNames(db, game);
+export const get = query({
+  args: {
+    id: v.string(),
+  },
+  handler: async ({ db }, { id }) => {
+    const gameId = db.normalizeId("games", id);
+    if (gameId === null) {
+      throw new ConvexError({ code: "GameNotFound", gameId: id });
+    }
+    const game = await db.get(gameId);
+    if (!game) {
+      throw new ConvexError({ code: "GameNotFound", gameId: id });
+    }
+    return await denormalizePlayerNames(db, game);
+  },
 });
 
 export const ongoingGames = query(async ({ db }) => {
@@ -177,7 +187,8 @@ async function _performMove(
   });
   const history = nextState.history();
   const move = history[history.length - 1];
-  await ctx.scheduler.runAfter(0, internal.games.analyzeMove, {
+  await createStream(ctx, {
+    game: nextState,
     gameId: state._id,
     moveIndex: history.length - 1,
     previousPGN: currentPGN,
@@ -191,90 +202,7 @@ async function _performMove(
   });
 }
 
-const boardView = (chess: Chess): string => {
-  const rows = [];
-  for (const row of chess.board()) {
-    let rowView = "";
-    for (const square of row) {
-      if (square === null) {
-        rowView += ".";
-      } else {
-        let piece = square.type as string;
-        if (square.color === "w") {
-          piece = piece.toUpperCase();
-        }
-        rowView += piece;
-      }
-    }
-    rows.push(rowView);
-  }
-  return rows.join("\n");
-};
-
-export const analyzeMove = internalAction({
-  args: {
-    gameId: v.id("games"),
-    moveIndex: v.number(),
-    previousPGN: v.string(),
-    move: v.string(),
-  },
-  handler: async (ctx, { gameId, moveIndex, previousPGN, move }) => {
-    const game = new Chess();
-    game.loadPgn(previousPGN);
-    const boardState = boardView(game);
-    const _boardState = game.fen();
-    const oldPrompt = `Analyze just the move at index ${moveIndex} in this chess game. Only tell me about the effect of that move.: ${game.history()}.`;
-    const prompt = `You are a chess expert. I am playing a chess game. The board looks like this:\n${boardState}\n\nAnalyze the effect of playing the move ${move}. Please analyze concisely, with less than 20 words. Then conclude with an over-the-top sentence describing sarcastic, flippant, or humorous feelings about the move.`;
-    const response = await chatCompletion({
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    });
-    let responseText = "";
-    for await (const chunk of response.content.read()) {
-      responseText += chunk;
-
-      await ctx.runMutation(internal.games.saveAnalysis, {
-        gameId: gameId,
-        moveIndex,
-        analysis: responseText,
-      });
-    }
-    console.log(`PROMPT '${prompt}' GOT RESPONSE '${responseText}'`);
-  },
-});
-
-export const saveAnalysis = internalMutation({
-  args: {
-    gameId: v.id("games"),
-    moveIndex: v.number(),
-    analysis: v.string(),
-  },
-  handler: async (ctx, { gameId, moveIndex, analysis }) => {
-    const analysisDoc = await ctx.db
-      .query("analysis")
-      .withIndex("by_game_index", (q) =>
-        q.eq("game", gameId).eq("moveIndex", moveIndex)
-      )
-      .unique();
-    if (analysisDoc) {
-      await ctx.db.patch(analysisDoc._id, {
-        analysis,
-      });
-    } else {
-      await ctx.db.insert("analysis", {
-        game: gameId,
-        moveIndex,
-        analysis,
-      });
-    }
-  },
-});
-
-export const getAnalysis = query({
+export const getMove = query({
   args: { gameId: v.id("games"), moveIndex: v.optional(v.number()) },
   handler: async (ctx, { gameId, moveIndex }) => {
     const state = await ctx.db.get(gameId);
@@ -282,34 +210,14 @@ export const getAnalysis = query({
       throw new Error("Invalid Game ID");
     }
 
-    let analysis;
-    if (moveIndex !== undefined) {
-      analysis = await ctx.db
-        .query("analysis")
-        .withIndex("by_game_index", (q) =>
-          q.eq("game", gameId).eq("moveIndex", moveIndex)
-        )
-        .unique();
-    } else {
-      analysis = await ctx.db
-        .query("analysis")
-        .withIndex("by_game_index", (q) => q.eq("game", gameId))
-        .order("desc")
-        .first();
-    }
-
-    if (analysis === null) {
-      return null;
-    }
-
     const currentPGN = state.pgn;
     const game = new Chess();
     game.loadPgn(currentPGN);
-    const move = game.history()[analysis.moveIndex];
+    const moveIdx = moveIndex ?? game.history().length - 1;
+    const move = game.history()[moveIdx];
 
     return {
-      analysis: analysis.analysis,
-      moveIndex: analysis.moveIndex,
+      moveIndex: moveIdx,
       move,
     };
   },
