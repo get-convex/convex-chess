@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as analyze from "../analyze.js";
 import type * as auth from "../auth.js";
 import type * as engine from "../engine.js";
 import type * as games from "../games.js";
@@ -33,6 +34,7 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  analyze: typeof analyze;
   auth: typeof auth;
   engine: typeof engine;
   games: typeof games;
@@ -161,6 +163,41 @@ export declare const components: {
         "mutation",
         "internal",
         { currentKey: any; newKey: any; summand?: number; value: any },
+        any
+      >;
+    };
+  };
+  persistentTextStreaming: {
+    lib: {
+      addChunk: FunctionReference<
+        "mutation",
+        "internal",
+        { final: boolean; streamId: string; text: string },
+        any
+      >;
+      createStream: FunctionReference<"mutation", "internal", {}, any>;
+      getStreamStatus: FunctionReference<
+        "query",
+        "internal",
+        { streamId: string },
+        "pending" | "streaming" | "done" | "error" | "timeout"
+      >;
+      getStreamText: FunctionReference<
+        "query",
+        "internal",
+        { streamId: string },
+        {
+          status: "pending" | "streaming" | "done" | "error" | "timeout";
+          text: string;
+        }
+      >;
+      setStreamStatus: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          status: "pending" | "streaming" | "done" | "error" | "timeout";
+          streamId: string;
+        },
         any
       >;
     };

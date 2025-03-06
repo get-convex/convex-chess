@@ -16,9 +16,18 @@ export default defineSchema({
     game: v.id("games"),
     moveIndex: v.number(),
     analysis: v.string(),
+    streamId: v.optional(v.string()),
   })
     .index("by_game_index", ["game", "moveIndex"])
     .searchIndex("search_analysis", { searchField: "analysis" }),
+  prompts: defineTable({
+    game: v.id("games"),
+    moveIndex: v.number(),
+    prompt: v.string(),
+    streamId: v.optional(v.string()),
+  })
+    .index("by_game_index", ["game", "moveIndex"])
+    .index("by_stream_id", ["streamId"]),
   users: defineTable({
     name: v.optional(v.string()),
     email: v.optional(v.string()),

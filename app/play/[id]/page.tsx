@@ -10,9 +10,10 @@ import { validateMove, isOpen, playerEquals } from "../../../convex/utils";
 import { gameTitle } from "../../../common";
 import { useEffect, useState } from "react";
 import { Piece } from "react-chessboard/dist/chessboard/types";
+import { useStream } from "@convex-dev/persistent-text-streaming/react";
 
 export default function Game({ params }: { params: { id: string } }) {
-  const gameId = params.id as Id<"games">;
+  const gameId = params.id;
   const searchParams = useSearchParams();
   const moveIdx =
     searchParams.get("moveIndex") !== null
@@ -21,6 +22,7 @@ export default function Game({ params }: { params: { id: string } }) {
 
   const gameState = useQuery(api.games.get, { id: gameId });
   const user = useQuery(api.users.getMyUser) ?? null;
+  const convexSiteUrl = useQuery(api.analyze.getSiteUrl);
   const [selectedMove, setSelectedMove] = useState<undefined | number>(moveIdx);
   const [mainStyle, setMainStyle] = useState<{ backgroundColor?: string }>({});
 
@@ -28,10 +30,9 @@ export default function Game({ params }: { params: { id: string } }) {
     if (moveIdx !== undefined && moveIdx !== selectedMove)
       setSelectedMove(moveIdx);
   }, [moveIdx]);
-
-  const { analysis, moveIndex, move } =
+  const { moveIndex, move } =
     useQuery(
-      api.games.getAnalysis,
+      api.games.getMove,
       gameState ? { gameId: gameState._id, moveIndex: selectedMove } : "skip"
     ) ?? {};
 
@@ -62,7 +63,7 @@ export default function Game({ params }: { params: { id: string } }) {
   }
 
   if (isOpen(gameState)) {
-    joinGame({ id: gameId });
+    joinGame({ id: gameState._id });
   }
 
   const game = new Chess();
@@ -90,7 +91,7 @@ export default function Game({ params }: { params: { id: string } }) {
     );
     if (nextState) {
       await performMove({
-        gameId,
+        gameId: gameState!._id,
         from: sourceSquare,
         to: targetSquare,
         finalPiece,
@@ -101,7 +102,7 @@ export default function Game({ params }: { params: { id: string } }) {
       setTimeout(() => setMainStyle({}), 50);
       try {
         await tryPerformMove({
-          gameId,
+          gameId: gameState!._id,
           from: sourceSquare,
           to: targetSquare,
           finalPiece,
@@ -177,7 +178,14 @@ export default function Game({ params }: { params: { id: string } }) {
                   </td>
                 </tr>
                 <tr>
-                  <td className="analysis">{analysis}</td>
+                  <td className="analysis">
+                    {convexSiteUrl && (
+                      <GameAnalysis
+                        convexSiteUrl={convexSiteUrl}
+                        gameId={gameState._id}
+                      />
+                    )}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -186,4 +194,23 @@ export default function Game({ params }: { params: { id: string } }) {
       </div>
     </main>
   );
+}
+
+function GameAnalysis({
+  convexSiteUrl,
+  gameId,
+}: {
+  convexSiteUrl: string;
+  gameId: Id<"games">;
+}) {
+  const latestAnalysisStream = useQuery(api.analyze.getLatestAnalysisStream, {
+    gameId,
+  });
+  const analysisStream = useStream(
+    api.analyze.getAnalysis,
+    new URL("/analyze", convexSiteUrl),
+    true,
+    latestAnalysisStream ?? undefined
+  );
+  return <div>{analysisStream.text}</div>;
 }
