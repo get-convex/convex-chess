@@ -1,12 +1,14 @@
 "use client";
 import { useQuery, useMutation } from "convex/react";
-import { useRef, useState } from "react";
+import { use, useRef, useState } from "react";
 import { Id } from "../../../convex/_generated/dataModel";
 import { api } from "../../../convex/_generated/api";
 
-export default async function Profile({ params }: PageProps<"/user/[id]">) {
-  const userId = (await params).id as Id<"users">;
-  const user = useQuery(api.users.get, { id: userId }) ?? null;
+export default function Profile(props: PageProps<"/user/[id]">) {
+  const params = use(props.params);
+  const userId = params ? (params.id as Id<"users">) : null;
+  const user =
+    useQuery(api.users.get, userId !== null ? { id: userId } : "skip") ?? null;
   const myUser = useQuery(api.users.getMyUser) ?? null;
 
   const imageInput = useRef(null);

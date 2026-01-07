@@ -1,6 +1,6 @@
 "use client";
 import { api } from "../../../convex/_generated/api";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Chess, Move, Square } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
@@ -11,15 +11,19 @@ import { gameTitle } from "../../../common";
 import { use, useEffect, useState } from "react";
 import { Piece } from "react-chessboard/dist/chessboard/types";
 
-export default async function Game({ params }: PageProps<"/play/[id]">) {
-  const gameId = (await params).id as Id<"games">;
+export default function Game(props: PageProps<"/play/[id]">) {
+  const params = use(props.params);
+  const gameId = params ? (params.id as Id<"games">) : null;
   const searchParams = useSearchParams();
   const moveIdx =
     searchParams.get("moveIndex") !== null
       ? Number(searchParams.get("moveIndex"))
       : undefined;
 
-  const gameState = useQuery(api.games.get, { id: gameId });
+  const gameState = useQuery(
+    api.games.get,
+    gameId !== null ? { id: gameId } : "skip"
+  );
   const user = useQuery(api.users.getMyUser) ?? null;
   const [selectedMove, setSelectedMove] = useState<undefined | number>(moveIdx);
   const [mainStyle, setMainStyle] = useState<{ backgroundColor?: string }>({});
