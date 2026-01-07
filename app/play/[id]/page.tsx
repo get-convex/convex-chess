@@ -1,6 +1,6 @@
 "use client";
 import { api } from "../../../convex/_generated/api";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Chess, Move, Square } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
@@ -8,18 +8,22 @@ import { useMutation, useQuery } from "convex/react";
 import { Id } from "../../../convex/_generated/dataModel";
 import { validateMove, isOpen, playerEquals } from "../../../convex/utils";
 import { gameTitle } from "../../../common";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Piece } from "react-chessboard/dist/chessboard/types";
 
-export default function Game({ params }: { params: { id: string } }) {
-  const gameId = params.id as Id<"games">;
+export default function Game(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
+  const gameId = params ? (params.id as Id<"games">) : null;
   const searchParams = useSearchParams();
   const moveIdx =
     searchParams.get("moveIndex") !== null
       ? Number(searchParams.get("moveIndex"))
       : undefined;
 
-  const gameState = useQuery(api.games.get, { id: gameId });
+  const gameState = useQuery(
+    api.games.get,
+    gameId !== null ? { id: gameId } : "skip"
+  );
   const user = useQuery(api.users.getMyUser) ?? null;
   const [selectedMove, setSelectedMove] = useState<undefined | number>(moveIdx);
   const [mainStyle, setMainStyle] = useState<{ backgroundColor?: string }>({});
@@ -61,7 +65,7 @@ export default function Game({ params }: { params: { id: string } }) {
     return <></>;
   }
 
-  if (isOpen(gameState)) {
+  if (gameId && isOpen(gameState)) {
     joinGame({ id: gameId });
   }
 
@@ -80,6 +84,10 @@ export default function Game({ params }: { params: { id: string } }) {
     targetSquare: Square,
     piece: Piece
   ) {
+    if (gameId === null) {
+      throw new Error("onDrop called without parameters loaded");
+    }
+
     const finalPiece = piece[1].toLowerCase();
     let nextState = validateMove(
       gameState!,
