@@ -8,11 +8,11 @@ import { useMutation, useQuery } from "convex/react";
 import { Id } from "../../../convex/_generated/dataModel";
 import { validateMove, isOpen, playerEquals } from "../../../convex/utils";
 import { gameTitle } from "../../../common";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { Piece } from "react-chessboard/dist/chessboard/types";
 
-export default function Game({ params }: { params: { id: string } }) {
-  const gameId = params.id as Id<"games">;
+export default async function Game({ params }: PageProps<"/play/[id]">) {
+  const gameId = (await params).id as Id<"games">;
   const searchParams = useSearchParams();
   const moveIdx =
     searchParams.get("moveIndex") !== null
