@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { Id } from "../../../convex/_generated/dataModel";
 import { api } from "../../../convex/_generated/api";
 
-export default function Profile({ params }: { params: { id: string } }) {
-  const userId = params.id as Id<"users">;
+export default async function Profile({ params }: PageProps<"/user/[id]">) {
+  const userId = (await params).id as Id<"users">;
   const user = useQuery(api.users.get, { id: userId }) ?? null;
   const myUser = useQuery(api.users.getMyUser) ?? null;
 
