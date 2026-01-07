@@ -4,7 +4,7 @@ import { use, useRef, useState } from "react";
 import { Id } from "../../../convex/_generated/dataModel";
 import { api } from "../../../convex/_generated/api";
 
-export default function Profile(props: PageProps<"/user/[id]">) {
+export default function Profile(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
   const userId = params ? (params.id as Id<"users">) : null;
   const user =

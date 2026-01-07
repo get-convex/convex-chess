@@ -11,7 +11,7 @@ import { gameTitle } from "../../../common";
 import { use, useEffect, useState } from "react";
 import { Piece } from "react-chessboard/dist/chessboard/types";
 
-export default function Game(props: PageProps<"/play/[id]">) {
+export default function Game(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
   const gameId = params ? (params.id as Id<"games">) : null;
   const searchParams = useSearchParams();
