@@ -65,7 +65,7 @@ export default function Game(props: PageProps<"/play/[id]">) {
     return <></>;
   }
 
-  if (isOpen(gameState)) {
+  if (gameId && isOpen(gameState)) {
     joinGame({ id: gameId });
   }
 
@@ -84,6 +84,10 @@ export default function Game(props: PageProps<"/play/[id]">) {
     targetSquare: Square,
     piece: Piece
   ) {
+    if (gameId === null) {
+      throw new Error("onDrop called without parameters loaded");
+    }
+
     const finalPiece = piece[1].toLowerCase();
     let nextState = validateMove(
       gameState!,
