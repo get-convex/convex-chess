@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../styles/globals.css";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
-import { ConvexClientProvider } from "./ConvexClientProvider";
+import {
+  ConvexClientProvider,
+  StagingIndicator,
+} from "./ConvexClientProvider";
 
 import { SearchBar } from "../components/SearchBar";
 import { UserBadge } from "../components/UserBadge";
@@ -39,7 +42,7 @@ export default function RootLayout({
           >
             <ConvexClientProvider>
               <SearchBar />
-              <h1>Convex Chess</h1>
+              <h1>Convex Chess<StagingIndicator /></h1>
               <UserBadge />
               {children}
             </ConvexClientProvider>
