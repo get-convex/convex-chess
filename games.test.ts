@@ -5,7 +5,7 @@ describe("games", () => {
   let t: ConvexTestingHelper;
 
   beforeEach(() => {
-    t = new ConvexTestingHelper();
+    t = new ConvexTestingHelper({ adminKey: process.env.CONVEX_ADMIN_KEY });
   });
 
   afterEach(async () => {
