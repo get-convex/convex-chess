@@ -35,13 +35,12 @@ export const maybeMakeComputerMove = internalAction(
     // aiMove has format {moveFrom: moveTo}
     let moveFrom = Object.keys(aiMove)[0];
     let moveTo = aiMove[moveFrom];
-    console.log(`move at level ${level}: ${moveFrom}->${moveTo}`);
+    console.log(`Move at level ${level}: ${moveFrom}->${moveTo}`);
     await runMutation(internal.games.internalMakeComputerMove, {
       id,
       moveFrom: moveFrom.toLowerCase(),
       moveTo: moveTo.toLowerCase(),
       finalPiece: "q", // js-chess-engine only knows how to promote queen
     });
-    // ignore this comment
   }
 );

@@ -364,7 +364,7 @@ export const internalGetPgnForComputerMove = query(
     if (opponent !== "Computer") {
       const opponentPlayer = await db.get(opponent as Id<"users">);
       const name = opponentPlayer?.name?.toLowerCase();
-      if (name?.includes("nipunn")) {
+      if (name?.includes("nipunn") || name?.includes("magnus")) {
         strategy = "tricky";
       } else if (name?.includes("preslav")) {
         strategy = "hard";
