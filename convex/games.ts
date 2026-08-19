@@ -191,24 +191,18 @@ async function _performMove(
   });
 }
 
+const COLOR_NAMES = { b: "black", w: "white" };
+const PIECE_NAMES = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
 const boardView = (chess: Chess): string => {
-  const rows = [];
+  const pieces = [];
   for (const row of chess.board()) {
-    let rowView = "";
     for (const square of row) {
-      if (square === null) {
-        rowView += ".";
-      } else {
-        let piece = square.type as string;
-        if (square.color === "w") {
-          piece = piece.toUpperCase();
-        }
-        rowView += piece;
+      if (square !== null) {
+        pieces.push(`${square.square}: ${COLOR_NAMES[square.color]} ${PIECE_NAMES[square.type]}`);
       }
     }
-    rows.push(rowView);
   }
-  return rows.join("\n");
+  return pieces.join("\n");
 };
 
 export const analyzeMove = internalAction({
@@ -222,9 +216,13 @@ export const analyzeMove = internalAction({
     const game = new Chess();
     game.loadPgn(previousPGN);
     const boardState = boardView(game);
-    const _boardState = game.fen();
-    const oldPrompt = `Analyze just the move at index ${moveIndex} in this chess game. Only tell me about the effect of that move.: ${game.history()}.`;
-    const prompt = `You are a chess expert. I am playing a chess game. The board looks like this:\n${boardState}\n\nAnalyze the effect of playing the move ${move}. Please analyze concisely, with less than 20 words. Then conclude with an over-the-top sentence describing sarcastic, flippant, or humorous feelings about the move.`;
+    const history = game.history();
+    let lastMove = '';
+    if (history.length > 0) lastMove = ` The previous move was ${history[history.length - 1]}.`;
+    const prompt = `You are a chess expert. I am playing a chess game. The board looks like this:
+${boardState}
+
+It is move number ${game.moveNumber()} and ${COLOR_NAMES[game.turn()]}'s turn to move.${lastMove} Analyze the effect of playing the move ${move}. Please analyze concisely, with less than 20 words. Then conclude with an over-the-top sentence describing sarcastic, flippant, or humorous feelings about the move.`;
     const response = await chatCompletion({
       messages: [
         {
