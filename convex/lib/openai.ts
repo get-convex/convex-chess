@@ -1,64 +1,41 @@
-import { getServiceToken } from "convex/server";
-
-// `getServiceToken` ships in convex 1.44.0 but is marked `@internal`, so the
-// published package strips its type declaration. Remove this augmentation
-// once a release exports the type.
-declare module "convex/server" {
-  function getServiceToken(service: "ai-gateway"): Promise<string>;
-}
+import { convexGateway } from "@convex-dev/ai-sdk-provider";
+import { streamText, type ModelMessage } from "ai";
 
 // The Convex AI gateway proxies chat completions to OpenRouter, so model
 // names use OpenRouter's `provider/model` form.
 const DEFAULT_MODEL = "openai/gpt-4o-mini";
 
-const STAGING_GATEWAY_HOST = "https://staging.ai-gateway.convex.dev";
-
+// The provider reads the gateway host from CONVEX_INTERNAL_AI_GATEWAY_HOST and
+// defaults to production, so staging needs that variable set on the deployment.
 export async function chatCompletion(
   body: Omit<CreateChatCompletionRequest, "model"> & {
     model?: CreateChatCompletionRequest["model"];
   }
 ) {
-  body.model = body.model ?? DEFAULT_MODEL;
-  body.stream = true;
   const stopWords = body.stop
     ? typeof body.stop === "string"
       ? [body.stop]
       : body.stop
     : [];
-  const {
-    result: resultStream,
-    retries,
-    ms,
-  } = await retryWithBackoff(async () => {
-    const gatewayHost =
-      process.env.CONVEX_INTERNAL_AI_GATEWAY_HOST || STAGING_GATEWAY_HOST;
-    const result = await fetch(`${gatewayHost}/v1/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Deployment JWT is the only credential the gateway accepts.
-        Authorization: "Bearer " + (await getServiceToken("ai-gateway")),
-      },
-
-      body: JSON.stringify(body),
-    });
-    if (!result.ok) {
-      throw {
-        retry: result.status === 429 || result.status >= 500,
-        error: new Error(
-          `Chat completion failed with code ${
-            result.status
-          }: ${await result.text()}`
-        ),
-      };
-    }
-    return result.body!;
+  // The provider mints a deployment token per request, and the AI SDK retries
+  // 429s and 5xxs itself, so there is nothing left for retryWithBackoff to do.
+  const { textStream } = streamText({
+    model: convexGateway(body.model ?? DEFAULT_MODEL),
+    messages: body.messages.map(toModelMessage),
+    stopSequences: stopWords.length > 0 ? stopWords : undefined,
+    temperature: body.temperature ?? undefined,
+    maxOutputTokens: body.max_tokens,
   });
   return {
-    content: new ChatCompletionContent(resultStream, stopWords),
-    retries,
-    ms,
+    content: new ChatCompletionContent(textStream, stopWords),
   };
+}
+
+function toModelMessage(message: LLMMessage): ModelMessage {
+  if (message.role === "function") {
+    throw new Error("The AI gateway provider does not take function messages");
+  }
+  return { role: message.role, content: message.content ?? "" };
 }
 
 export async function fetchEmbeddingBatch(texts: string[]) {
@@ -376,36 +353,19 @@ const suffixOverlapsPrefix = (s1: string, s2: string) => {
 };
 
 export class ChatCompletionContent {
-  private readonly body: ReadableStream<Uint8Array>;
+  private readonly stream: AsyncIterable<string>;
   private readonly stopWords: string[];
 
-  constructor(body: ReadableStream<Uint8Array>, stopWords: string[]) {
-    this.body = body;
+  constructor(stream: AsyncIterable<string>, stopWords: string[]) {
+    this.stream = stream;
     this.stopWords = stopWords;
-  }
-
-  async *readInner() {
-    for await (const data of this.splitStream(this.body)) {
-      if (data.startsWith("data: ")) {
-        try {
-          const json = JSON.parse(data.substring("data: ".length)) as {
-            choices: { delta: { content?: string } }[];
-          };
-          if (json.choices[0].delta.content) {
-            yield json.choices[0].delta.content;
-          }
-        } catch (e) {
-          // e.g. the last chunk is [DONE] which is not valid JSON.
-        }
-      }
-    }
   }
 
   // stop words in OpenAI api don't always work.
   // So we have to truncate on our side.
   async *read() {
     let lastFragment = "";
-    for await (const data of this.readInner()) {
+    for await (const data of this.stream) {
       lastFragment += data;
       let hasOverlap = false;
       for (const stopWord of this.stopWords) {
@@ -431,33 +391,5 @@ export class ChatCompletionContent {
       allContent += chunk;
     }
     return allContent;
-  }
-
-  async *splitStream(stream: ReadableStream<Uint8Array>) {
-    const reader = stream.getReader();
-    let lastFragment = "";
-    try {
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) {
-          // Flush the last fragment now that we're done
-          if (lastFragment !== "") {
-            yield lastFragment;
-          }
-          break;
-        }
-        const data = new TextDecoder().decode(value);
-        lastFragment += data;
-        const parts = lastFragment.split("\n\n");
-        // Yield all except for the last part
-        for (let i = 0; i < parts.length - 1; i += 1) {
-          yield parts[i];
-        }
-        // Save the last part as the new last fragment
-        lastFragment = parts[parts.length - 1];
-      }
-    } finally {
-      reader.releaseLock();
-    }
   }
 }
