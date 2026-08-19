@@ -1,8 +1,6 @@
 import { convexGateway } from "@convex-dev/ai-sdk-provider";
 import { streamText, type ModelMessage } from "ai";
 
-// The Convex AI gateway proxies chat completions to OpenRouter, so model
-// names use OpenRouter's `provider/model` form.
 const DEFAULT_MODEL = "openai/gpt-4o-mini";
 
 // The provider reads the gateway host from CONVEX_INTERNAL_AI_GATEWAY_HOST and
@@ -17,8 +15,6 @@ export async function chatCompletion(
       ? [body.stop]
       : body.stop
     : [];
-  // The provider mints a deployment token per request, and the AI SDK retries
-  // 429s and 5xxs itself, so there is nothing left for retryWithBackoff to do.
   const { textStream } = streamText({
     model: convexGateway(body.model ?? DEFAULT_MODEL),
     messages: body.messages.map(toModelMessage),
