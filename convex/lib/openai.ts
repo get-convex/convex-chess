@@ -3,8 +3,6 @@ import { streamText, type ModelMessage } from "ai";
 
 const DEFAULT_MODEL = "openai/gpt-4o-mini";
 
-// The provider reads the gateway host from CONVEX_INTERNAL_AI_GATEWAY_HOST and
-// defaults to production, so staging needs that variable set on the deployment.
 export async function chatCompletion(
   body: Omit<CreateChatCompletionRequest, "model"> & {
     model?: CreateChatCompletionRequest["model"];
