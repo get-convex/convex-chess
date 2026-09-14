@@ -71,6 +71,10 @@ export default function Game(props: { params: Promise<{ id: string }> }) {
 
   const game = new Chess();
   game.loadPgn(gameState.pgn);
+  const moves = game.history().join("_");
+  const analysisUrl = moves
+    ? `https://lichess.org/analysis/pgn/${encodeURIComponent(moves)}`
+    : "https://lichess.org/analysis";
 
   const clickWhiteMove = (i: number) => {
     setSelectedMove(i * 2);
@@ -144,6 +148,14 @@ export default function Game(props: { params: Promise<{ id: string }> }) {
   return (
     <main style={{ ...mainStyle, gap: 8 }}>
       <div>{gameTitle(gameState)}</div>
+      <a
+        className="analysisButton"
+        href={analysisUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Analyze on Lichess
+      </a>
       <div className="game">
         <div className="board">
           <Chessboard

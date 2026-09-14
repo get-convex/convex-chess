@@ -127,8 +127,18 @@ button {
   background-color: rgb(49, 108, 244);
 }
 
+.analysisButton {
+  background-color: rgb(49, 108, 244);
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  padding: 6px 12px;
+  text-decoration: none;
+}
+
 input[type="submit"]:hover,
-button:hover {
+button:hover,
+.analysisButton:hover {
   background-color: rgb(41, 93, 207);
 }
 
