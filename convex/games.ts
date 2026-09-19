@@ -22,6 +22,7 @@ import { Chess } from "chess.js";
 import { Scheduler } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { chatCompletion } from "./lib/openai";
+import { rateChessMove } from "./lib/jev";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { aggregate } from ".";
 
@@ -186,19 +187,37 @@ async function _performMove(
 
   await aggregate.insert(ctx, move, `${state._id}:${history.length - 1}`, 1);
 
+  await ctx.scheduler.runAfter(0, internal.games.rateMove, {
+    gameId: state._id,
+    moveIndex: history.length - 1,
+    previousPGN: currentPGN,
+    move,
+  });
+
   await ctx.scheduler.runAfter(1000, internal.engine.maybeMakeComputerMove, {
     id: state._id,
   });
 }
 
 const COLOR_NAMES = { b: "black", w: "white" };
-const PIECE_NAMES = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
+const PIECE_NAMES = {
+  p: "pawn",
+  n: "knight",
+  b: "bishop",
+  r: "rook",
+  q: "queen",
+  k: "king",
+};
 const boardView = (chess: Chess): string => {
   const pieces = [];
   for (const row of chess.board()) {
     for (const square of row) {
       if (square !== null) {
-        pieces.push(`${square.square}: ${COLOR_NAMES[square.color]} ${PIECE_NAMES[square.type]}`);
+        pieces.push(
+          `${square.square}: ${COLOR_NAMES[square.color]} ${
+            PIECE_NAMES[square.type]
+          }`
+        );
       }
     }
   }
@@ -217,12 +236,15 @@ export const analyzeMove = internalAction({
     game.loadPgn(previousPGN);
     const boardState = boardView(game);
     const history = game.history();
-    let lastMove = '';
-    if (history.length > 0) lastMove = ` The previous move was ${history[history.length - 1]}.`;
+    let lastMove = "";
+    if (history.length > 0)
+      lastMove = ` The previous move was ${history[history.length - 1]}.`;
     const prompt = `You are a chess expert. I am playing a chess game. The board looks like this:
 ${boardState}
 
-It is move number ${game.moveNumber()} and ${COLOR_NAMES[game.turn()]}'s turn to move.${lastMove} Analyze the effect of playing the move ${move}. Please analyze concisely, with less than 20 words. Then conclude with an over-the-top sentence describing sarcastic, flippant, or humorous feelings about the move.`;
+It is move number ${game.moveNumber()} and ${
+      COLOR_NAMES[game.turn()]
+    }'s turn to move.${lastMove} Analyze the effect of playing the move ${move}. Please analyze concisely, with less than 20 words. Then conclude with an over-the-top sentence describing sarcastic, flippant, or humorous feelings about the move.`;
     const response = await chatCompletion({
       messages: [
         {
@@ -242,6 +264,58 @@ It is move number ${game.moveNumber()} and ${COLOR_NAMES[game.turn()]}'s turn to
       });
     }
     console.log(`PROMPT '${prompt}' GOT RESPONSE '${responseText}'`);
+  },
+});
+
+export const rateMove = internalAction({
+  args: {
+    gameId: v.id("games"),
+    moveIndex: v.number(),
+    previousPGN: v.string(),
+    move: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { gameId, moveIndex, previousPGN, move }) => {
+    let rating: number | null = null;
+    try {
+      rating = await rateChessMove(previousPGN, move);
+    } catch (error) {
+      console.error("Jev move rating failed", error);
+    }
+    await ctx.runMutation(internal.games.saveMoveRating, {
+      gameId,
+      moveIndex,
+      rating,
+    });
+    return null;
+  },
+});
+
+export const saveMoveRating = internalMutation({
+  args: {
+    gameId: v.id("games"),
+    moveIndex: v.number(),
+    rating: v.union(v.number(), v.null()),
+  },
+  returns: v.null(),
+  handler: async (ctx, { gameId, moveIndex, rating }) => {
+    const existing = await ctx.db
+      .query("analysis")
+      .withIndex("by_game_index", (q) =>
+        q.eq("game", gameId).eq("moveIndex", moveIndex)
+      )
+      .unique();
+    if (existing) {
+      await ctx.db.patch(existing._id, { jevRating: rating });
+    } else {
+      await ctx.db.insert("analysis", {
+        game: gameId,
+        moveIndex,
+        analysis: "",
+        jevRating: rating,
+      });
+    }
+    return null;
   },
 });
 
@@ -307,6 +381,7 @@ export const getAnalysis = query({
 
     return {
       analysis: analysis.analysis,
+      jevRating: analysis.jevRating,
       moveIndex: analysis.moveIndex,
       move,
     };
