@@ -16,6 +16,7 @@ export default defineSchema({
     game: v.id("games"),
     moveIndex: v.number(),
     analysis: v.string(),
+    jevRating: v.optional(v.union(v.number(), v.null())),
   })
     .index("by_game_index", ["game", "moveIndex"])
     .searchIndex("search_analysis", { searchField: "analysis" }),

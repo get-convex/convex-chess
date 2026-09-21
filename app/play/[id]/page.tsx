@@ -33,7 +33,7 @@ export default function Game(props: { params: Promise<{ id: string }> }) {
       setSelectedMove(moveIdx);
   }, [moveIdx]);
 
-  const { analysis, moveIndex, move } =
+  const { analysis, moveIndex, move, jevRating } =
     useQuery(
       api.games.getAnalysis,
       gameState ? { gameId: gameState._id, moveIndex: selectedMove } : "skip"
@@ -199,6 +199,20 @@ export default function Game(props: { params: Promise<{ id: string }> }) {
                 <tr>
                   <td className="analysis">{analysis}</td>
                 </tr>
+                {jevRating !== undefined && (
+                  <tr>
+                    <td role="status">
+                      {jevRating === null ? (
+                        "Jev rating unavailable"
+                      ) : (
+                        <>
+                          <strong>Jev: {jevRating.toFixed(1)}/10</strong>
+                          <div>AI estimate, not a chess engine evaluation.</div>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           )}
