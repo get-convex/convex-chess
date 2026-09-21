@@ -1,5 +1,6 @@
+import { convexGateway } from "@convex-dev/ai-sdk-provider";
+import { experimental_evaluate as evaluate } from "ai";
 import { Chess } from "chess.js";
-import { getServiceToken } from "convex/server";
 
 const criteria = [
   "Throws away a winning or drawable game by allowing an immediate forced loss.",
@@ -21,35 +22,20 @@ export async function rateChessMove(previousPGN: string, move: string) {
   const player = game.turn() === "w" ? "white" : "black";
   game.move(move);
 
-  const token = await getServiceToken("ai-gateway");
-  const host =
-    process.env.CONVEX_INTERNAL_AI_GATEWAY_HOST ??
-    "https://ai-gateway.convex.dev";
-  const response = await fetch(new URL("/alpha/decisions", host), {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    signal: AbortSignal.timeout(30_000),
-    body: JSON.stringify({
-      model: "typesafe/jev-1.13",
-      state: { before, after: game.fen(), player, move, previousPGN },
-      questions: {
-        moveQuality: {
-          type: "score",
-          instructions:
-            "Evaluate this chess move from the moving player's perspective, relative to the legal alternatives in the position.",
-          criteria,
-        },
+  const result = await evaluate({
+    model: convexGateway.evaluationModel("typesafe/jev-1.13"),
+    state: { before, after: game.fen(), player, move, previousPGN },
+    questions: {
+      moveQuality: {
+        type: "score",
+        instructions:
+          "Evaluate this chess move from the moving player's perspective, relative to the legal alternatives in the position.",
+        criteria,
       },
-    }),
+    },
+    abortSignal: AbortSignal.timeout(30_000),
   });
-  if (!response.ok) {
-    throw new Error(`Jev rating request failed (${response.status}).`);
-  }
-  const body = await response.json();
-  const answer = body?.answers?.moveQuality;
+  const answer = result.answers.moveQuality;
   if (
     answer?.type !== "score" ||
     typeof answer.score !== "number" ||

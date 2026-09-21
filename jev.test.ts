@@ -1,33 +1,47 @@
-import { getServiceToken } from "convex/server";
+import { convexGateway } from "@convex-dev/ai-sdk-provider";
+import { experimental_evaluate as evaluate } from "ai";
 import { rateChessMove } from "./convex/lib/jev";
 
-jest.mock("convex/server", () => ({ getServiceToken: jest.fn() }));
+jest.mock("@convex-dev/ai-sdk-provider", () => ({
+  convexGateway: {
+    evaluationModel: jest.fn(() => "test-evaluation-model"),
+  },
+}));
+jest.mock("ai", () => ({ experimental_evaluate: jest.fn() }));
 
-const originalFetch = global.fetch;
+const mockedEvaluate = evaluate as jest.Mock;
+
 afterEach(() => {
-  global.fetch = originalFetch;
   jest.clearAllMocks();
 });
 
-test("sends the move's positions with gateway authentication and converts the score", async () => {
-  jest.mocked(getServiceToken).mockResolvedValue("test-token");
-  global.fetch = jest.fn().mockResolvedValue(
-    new Response(
-      JSON.stringify({
-        answers: { moveQuality: { type: "score", score: 6.25 } },
-      })
-    )
-  );
+test("evaluates the move's positions with the ten-level rubric", async () => {
+  mockedEvaluate.mockResolvedValue({
+    answers: { moveQuality: { type: "score", score: 6.25 } },
+  });
 
   expect(await rateChessMove("", "e4")).toBe(7.3);
-  const [url, options] = jest.mocked(global.fetch).mock.calls[0];
-  expect(new URL(String(url)).pathname).toBe("/alpha/decisions");
-  expect(options?.headers).toEqual(
-    expect.objectContaining({ Authorization: "Bearer test-token" })
+  expect(convexGateway.evaluationModel).toHaveBeenCalledWith(
+    "typesafe/jev-1.13"
   );
-  const request = JSON.parse(options?.body as string);
-  expect(request.model).toBe("typesafe/jev-1.13");
-  expect(request.state.player).toBe("white");
+  expect(mockedEvaluate).toHaveBeenCalledWith(
+    expect.objectContaining({
+      model: "test-evaluation-model",
+      state: expect.objectContaining({
+        player: "white",
+        move: "e4",
+        previousPGN: "",
+      }),
+      questions: {
+        moveQuality: expect.objectContaining({
+          type: "score",
+          criteria: expect.any(Array),
+        }),
+      },
+      abortSignal: expect.any(AbortSignal),
+    })
+  );
+  const request = mockedEvaluate.mock.calls[0][0];
   expect(request.state.before).not.toBe(request.state.after);
   expect(request.questions.moveQuality.criteria).toHaveLength(10);
 });
@@ -35,34 +49,21 @@ test("sends the move's positions with gateway authentication and converts the sc
 test.each([0, 9])(
   "maps rubric endpoint %s onto the 1–10 rating scale",
   async (score) => {
-    jest.mocked(getServiceToken).mockResolvedValue("test-token");
-    global.fetch = jest.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          answers: { moveQuality: { type: "score", score } },
-        })
-      )
-    );
+    mockedEvaluate.mockResolvedValue({
+      answers: { moveQuality: { type: "score", score } },
+    });
     expect(await rateChessMove("", "e4")).toBe(score + 1);
   }
 );
 
 test("rejects a score outside the rubric", async () => {
-  jest.mocked(getServiceToken).mockResolvedValue("test-token");
-  global.fetch = jest.fn().mockResolvedValue(
-    new Response(
-      JSON.stringify({
-        answers: { moveQuality: { type: "score", score: 10 } },
-      })
-    )
-  );
+  mockedEvaluate.mockResolvedValue({
+    answers: { moveQuality: { type: "score", score: 10 } },
+  });
   await expect(rateChessMove("", "e4")).rejects.toThrow("invalid move score");
 });
 
 test("reports upstream failures without treating them as ratings", async () => {
-  jest.mocked(getServiceToken).mockResolvedValue("test-token");
-  global.fetch = jest
-    .fn()
-    .mockResolvedValue(new Response("unavailable", { status: 503 }));
-  await expect(rateChessMove("", "e4")).rejects.toThrow("failed (503)");
+  mockedEvaluate.mockRejectedValue(new Error("upstream unavailable"));
+  await expect(rateChessMove("", "e4")).rejects.toThrow("upstream unavailable");
 });
