@@ -10,6 +10,7 @@ import { validateMove, isOpen, playerEquals } from "../../../convex/utils";
 import { gameTitle } from "../../../common";
 import { use, useEffect, useState } from "react";
 import { Piece } from "react-chessboard/dist/chessboard/types";
+import AnalysisSpeech from "../../../components/AnalysisSpeech";
 
 export default function Game(props: { params: Promise<{ id: string }> }) {
   const params = use(props.params);
@@ -197,7 +198,19 @@ export default function Game(props: { params: Promise<{ id: string }> }) {
                   </td>
                 </tr>
                 <tr>
-                  <td className="analysis">{analysis}</td>
+                  <td className="analysis">
+                    {analysis}
+                    {analysis &&
+                      user &&
+                      (gameState.player1 === user._id ||
+                        gameState.player2 === user._id) && (
+                        <AnalysisSpeech
+                          key={`${gameState._id}:${moveIndex}:${analysis}`}
+                          gameId={gameState._id}
+                          moveIndex={moveIndex}
+                        />
+                      )}
+                  </td>
                 </tr>
                 {jevRating !== undefined && (
                   <tr>
