@@ -1,6 +1,7 @@
 import { api, internal } from "./_generated/api";
 import {
   query,
+  action,
   mutation,
   DatabaseWriter,
   DatabaseReader,
@@ -25,6 +26,8 @@ import { chatCompletion } from "./lib/openai";
 import { rateChessMove } from "./lib/jev";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { aggregate } from ".";
+import { experimental_generateSpeech as generateSpeech } from "ai";
+import { convexGateway } from "@convex-dev/ai-sdk-provider";
 
 async function playerName(
   db: DatabaseReader,
@@ -385,6 +388,51 @@ export const getAnalysis = query({
       moveIndex: analysis.moveIndex,
       move,
     };
+  },
+});
+
+export const getSpeechText = internalQuery({
+  args: { gameId: v.id("games"), moveIndex: v.number() },
+  returns: v.string(),
+  handler: async (ctx, { gameId, moveIndex }) => {
+    const userId = await getAuthUserId(ctx);
+    const game = await ctx.db.get(gameId);
+    if (
+      !userId ||
+      !game ||
+      (game.player1 !== userId && game.player2 !== userId)
+    ) {
+      throw new ConvexError("Only players in this game can generate speech.");
+    }
+    const analysis = await ctx.db
+      .query("analysis")
+      .withIndex("by_game_index", (q) =>
+        q.eq("game", gameId).eq("moveIndex", moveIndex)
+      )
+      .unique();
+    const text = analysis?.analysis.trim();
+    if (!text || text.length > 2000) {
+      throw new ConvexError(
+        "Move analysis is unavailable or too long to read aloud."
+      );
+    }
+    return text;
+  },
+});
+
+export const speakAnalysis = action({
+  args: { gameId: v.id("games"), moveIndex: v.number() },
+  returns: v.string(),
+  handler: async (ctx, args): Promise<string> => {
+    const text = await ctx.runQuery(internal.games.getSpeechText, args);
+    const { audio } = await generateSpeech({
+      model: convexGateway.speechModel("hexgrad/kokoro-82m"),
+      text,
+      voice: "af_heart",
+      outputFormat: "mp3",
+      maxRetries: 0,
+    });
+    return `data:audio/mpeg;base64,${audio.base64}`;
   },
 });
 
