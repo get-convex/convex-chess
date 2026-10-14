@@ -15,6 +15,7 @@ import type * as engine from "../engine.js";
 import type * as games from "../games.js";
 import type * as http from "../http.js";
 import type * as index from "../index.js";
+import type * as lib_jev from "../lib/jev.js";
 import type * as lib_openai from "../lib/openai.js";
 import type * as search from "../search.js";
 import type * as testing from "../testing.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   games: typeof games;
   http: typeof http;
   index: typeof index;
+  "lib/jev": typeof lib_jev;
   "lib/openai": typeof lib_openai;
   search: typeof search;
   testing: typeof testing;
