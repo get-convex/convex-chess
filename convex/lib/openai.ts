@@ -1,7 +1,7 @@
 import { convexGateway } from "@convex-dev/ai-sdk-provider";
 import { streamText, type ModelMessage } from "ai";
 
-const DEFAULT_MODEL = "openai/gpt-4o-mini";
+const DEFAULT_MODEL = "~anthropic/claude-sonnet-latest";
 
 export async function chatCompletion(
   body: Omit<CreateChatCompletionRequest, "model"> & {
